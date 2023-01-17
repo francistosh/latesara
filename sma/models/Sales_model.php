@@ -48,7 +48,217 @@ class Sales_model extends CI_Model
         }
         return FALSE;
     }
+    public function getUserByID($id)
+    {
+        $q = $this->db->get_where('users', array('id' => $id), 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return FALSE;
+    }
+public function getAllBarReceptionSalesByCustID($cust_id)
+    {
+		$option = $this->getCostCenterByID($cust_id);
+		
+        $this->db->select($this->db->dbprefix('sales').".id as id,sales.id as sale_id, sma_sales.date,sales.id as reference_no, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, ' (', " . $this->db->dbprefix('sale_items') . ".quantity, ')') SEPARATOR '\n') as product_name, grand_total as unit_price, paid, (grand_total-paid) as subtotal, sales.currency,'".$option->name."' as name")
+				->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
+				->join('payments', 'sma_payments.sale_id = sma_sales.id', 'left')
+				->where('sma_payments.cost_center_no = "'.$option->name.'"')
+                ->group_by('sales.id');
+		 $q = $this->db->get_where('sales', array('sma_sales.pmethod' => 'costcenter', 'sma_sales.date >' => '2021-10-01 00:00:00','sma_sales.pos' => 1,'sma_sales.cleared' =>0,'sma_sales.grand_total > sma_sales.paid'));        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return FALSE;
+    }
+    
+     public function getCostCenterByID($id)
+    {
+        $q = $this->db->get_where('companies', array('id' => $id), 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return FALSE;
+    }
+    
+    public function  updateProductsQuantities($item){
+         $q = $this->db->get_where('warehouses_products', array(
+            'product_id' => $item['product_id']));
+        if ($q->num_rows() > 0) {
+            $new_quantity = $q->row()->quantity - $item['quantity'];
+            
+            $this->db->where('product_id', $item['product_id']);
+            $this->db->update('warehouses_products', array('quantity' => $new_quantity));
+        }
+    }
+    
+      public function addSale2($data = array(), $items = array(), $payment = array())
+    {
 
+        //$cost = $this->site->costing($items);
+        // $this->sma->print_arrays($cost);
+
+        if ($this->db->insert('sales', $data)) {
+            $sale_id = $this->db->insert_id();
+            if ($this->site->getReference('so') == $data['reference_no']) {
+                //enforce sales invoice
+                 $q = $this->db->get_where('sales', array('reference_no' =>$data['reference_no']), 1);
+        if ($q->num_rows() > 0) {
+           $this->site->updateReference('so');
+        }
+                $this->site->updateReference('so');
+            }
+            foreach ($items as $item) {
+                $this->updateProductsQuantities($item);
+                
+                $item['sale_id'] = $sale_id;
+                $this->db->insert('sale_items', $item);
+                $sale_item_id = $this->db->insert_id();
+                if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
+
+                    $item_costs = $this->site->item_costing($item);
+                    foreach ($item_costs as $item_cost) {
+                        $item_cost['sale_item_id'] = $sale_item_id;
+                        $item_cost['sale_id'] = $sale_id;
+                        if(! isset($item_cost['pi_overselling'])) {
+                            $this->db->insert('costing', $item_cost);
+                        }
+                    }
+
+                }
+            }
+
+            if ($data['sale_status'] == 'completed') {
+                $this->site->syncPurchaseItems($cost);
+            }
+
+            //post sale invoice to erp
+            //CR VAT,CR SALES,DR A/R
+            
+           
+            if ($data['payment_status'] == 'partial' || $data['payment_status'] == 'paid' && !empty($payment)) {
+                foreach($payment as $value){
+                    $value['sale_id'] = $sale_id;
+                    $json = array();
+                    $data2 = array();
+                    if ($value['paid_by'] == 'gift_card') {
+                        $this->db->update('gift_cards', array('balance' => $value['gc_balance']), array('card_no' => $value['cc_no']));
+                        unset($value['gc_balance']);
+                        $this->db->insert('payments', $value);
+        
+                        $response= array("success" => "1", "message" => "Sale updated " . $item);
+                    } else {
+                        $this->db->insert('payments', $value);
+                        $response= array("success" => "1", "message" => "Sale updated " . $item);
+                    }
+                    if ($this->site->getReference('pay') == $value['reference_no']) {
+                        $this->site->updateReference('pay');
+                    }
+                    
+                    $this->site->syncSalePayments($sale_id);
+                    // $this->postSaleInvoice($data);
+    
+                }
+
+         }
+            $this->site->syncQuantity($sale_id);
+            
+            return true;
+
+        }
+
+        return false;
+    }
+    
+     public function getSoldStock($user_id,$start_date,$end_date)
+    {
+        $this->db->select("sma_products.id, sma_products.name, SUM(sma_sale_items.quantity) AS soldQty, SUM(sma_sale_items.subtotal) as totalSale")
+        ->join("sma_sale_items", 'sma_sale_items.product_id = sma_products.id', 'left')
+        ->join("sma_sales", 'sma_sales.id = sma_sale_items.sale_id', 'left')
+        ->group_by('sma_products.id');
+        $q = $this->db->get_where('sma_products', array('sma_sales.created_at >=' => $start_date,'sma_sales.created_at <=' => $end_date,'sma_sales.created_by'=>$user_id));
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return array();
+    }
+    
+    public function fetchSales($user_id){
+        $date = date("Y-m-d");
+        $q = $this->db->get_where('sales', array('created_at =' => $date,'created_by =' => $user_id));
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response[] = array(
+                        "id"=>$row->id,
+                        "date"=>$row->date,
+                        "payment_status"=>$row->payment_status,
+                        "grand_total"=>intval($row->grand_total),
+                        "payments"=>$this->get_sale_payments($row->id),
+                        "products"=>$this->get_sma_sales($row->id)
+                    );
+            }
+            return $response;
+        }else{
+           return array();
+        }
+    } 
+    
+     public function get_sale_payments($id){
+         $q = $this->db->get_where('payments', array('sale_id'=>$id));
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response[] = array(
+                        "paid_by"=>$row->paid_by,
+                        "amount"=>intval($row->amount), 
+                        "type"=>$row->type
+                    );
+            }
+
+            return $response;
+        }
+       
+        return array();
+    } 
+    
+     public function get_sma_sales($id){
+         $r = $this->db->get_where('sale_items', array('sale_id'=>$id));
+        if ($r->num_rows() > 0) {
+            foreach (($r->result()) as $row) {
+                $response[] = array("product_id"=>$row->product_id,
+                        "code"=>$row->product_code, 
+                        "name"=>$row->product_name, 
+                        "discount"=>$row->discount,
+                        "price"=>intval($row->unit_price),
+                        "quantity"=>intval($row->quantity),
+                        "total"=>intval($row->subtotal)
+                    );
+            }
+
+            return $response;
+        }
+       
+        return array();
+    } 
+    	 public function getAllSalesByCustId($cust_id)
+    {
+        $this->db->select('sales.*')
+		->where('sma_sales.paid < sma_sales.grand_total')
+		 ->group_by('sales.id')
+            ->order_by('id', 'asc');
+        $q = $this->db->get_where('sales', array('sma_sales.customer_id' => $cust_id));
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return FALSE;
+    }
     public function getProductByCode($code)
     {
         $q = $this->db->get_where('products', array('code' => $code), 1);

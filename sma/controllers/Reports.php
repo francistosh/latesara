@@ -586,8 +586,8 @@ class Reports extends MY_Controller
        // if ($this->form_validation->run() == true) {
             
             $data = array('sdate' => $this->input->get('sdate'),);
-			$sdate = date('Y-m-d',strtotime("yesterday")).' 06:00:00';
-			$edate = $this->input->get('sdate').' 05:59:59';
+			$sdate = date('Y-m-d',strtotime("yesterday")).' 12:00:00';
+			$edate = $this->input->get('sdate').' 11:59:59';
 			
         //} else{
           //  $this->session->set_flashdata('error', (validation_errors() ? validation_errors() : $this->session->flashdata('error')));
@@ -643,7 +643,82 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
             $this->load->view($this->theme . 'reports/newstocksheet', $this->data);
         //}
     }
+	     function stockSheetmngnt($user_id)
+    {
+        
+     // $this->sma->checkPermissions('index');
+        //if (!$this->Owner && !$this->Admin) {
+            $user_id = $this->session->userdata('user_id');
+        //}
+        //$this->form_validation->set_rules('sdate', lang("Date"), 'required');
+       
+       // if ($this->form_validation->run() == true) {
+            
+            $data = array('sdate' => $this->input->get('edate'),);
+			$sdate1 = $this->input->get('sdate');
+			$edate1 = $this->input->get('edate');
+			$warehouseid = $this->input->get('stockwarehouse');
+			$edate = $this->sma->fld($edate1);
+			$sdate = $this->sma->fld($sdate1);
+        //} else{
+          //  $this->session->set_flashdata('error', (validation_errors() ? validation_errors() : $this->session->flashdata('error')));
+          //  redirect("reports");
+       // }
+		// BAR ONLY STOCK - Warehouse bar //CATEGORY NON-ALCOHOLIC AND ALCOHOLIC
+		$result=$this->db->query("SELECT * from (SELECT code,price,name,SUM(saleqty) as saleqty,SUM(purchaseqty) AS purchaseqty,SUM(adjstqty) AS adjstqty,SUM(saleopqty) as saleopqty,SUM(purchaseopqty) as purchaseopqty,SUM(adjstopqty) as adjstopqty,id,unit,category_id,subcategory_id FROM (
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty, 0 as purchaseqty,0 as adjstqty,0 as saleopqty,0 as purchaseopqty,0 as adjstopqty, sma_products.category_id,sma_products.subcategory_id FROM sma_products WHERE sma_products.category_id < '57' AND sma_products.category_id <> '53'  UNION
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty,0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_sale_items` ON `sma_products`.`id` = `sma_sale_items`.`product_id`
+LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id` WHERE sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-09-20 05:00:00' GROUP BY `sma_products`.`id` UNION
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty, SUM(COALESCE(sma_purchase_items.quantity, 0 )) as purchaseqty,0 as adjstqty,0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_purchase_items` ON `sma_products`.`id` = `sma_purchase_items`.`product_id`
+LEFT JOIN `sma_purchases` ON `sma_purchases`.`id` = `sma_purchase_items`.`purchase_id`  WHERE sma_purchase_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND  sma_purchases.date >= '$sdate' AND sma_purchases.date <= '$edate' AND sma_purchases.date > '2021-09-20 05:00:00'
+GROUP BY `sma_products`.`id` UNION
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty, SUM(COALESCE(sma_purchase_items.quantity, 0 )) as purchaseqty,0 as adjstqty,0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_purchase_items` ON `sma_products`.`id` = `sma_purchase_items`.`product_id`
+LEFT JOIN `sma_transfers` ON `sma_transfers`.`id` = `sma_purchase_items`.`transfer_id`  WHERE sma_purchase_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND  sma_transfers.date >= '$sdate' AND sma_transfers.date <= '$edate' AND sma_transfers.date > '2021-09-20 05:00:00'
+GROUP BY `sma_products`.`id` UNION
+SELECT `sma_products`.`id`,unit,sma_products.code, price,sma_products.name ,0 as saleqty, 0 as purchaseqty,SUM(IF(sma_adjustments.type='subtraction',sma_adjustments.quantity*-1,sma_adjustments.quantity)) as adjstqty,0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_adjustments` ON `sma_products`.`id` = `sma_adjustments`.`product_id`
+WHERE sma_adjustments.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND  sma_adjustments.date >= '$sdate' AND sma_adjustments.date <= '$edate' AND sma_adjustments.date >  '2021-09-20 05:00:00'
+GROUP BY `sma_products`.`id` UNION 
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty,0 as purchaseqty,0 as adjstqty, SUM(COALESCE(sma_sale_items.quantity, 0 )) as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_sale_items` ON `sma_products`.`id` = `sma_sale_items`.`product_id`
+LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id` WHERE sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND  sma_sales.date < '$sdate' AND  sma_sales.date > '2021-09-20 05:00:00'  GROUP BY `sma_products`.`id` UNION
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty, 0 as purchaseqty,0 as adjstqty,0 as saleopqty,SUM(COALESCE(sma_purchase_items.quantity, 0 )) as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_purchase_items` ON `sma_products`.`id` = `sma_purchase_items`.`product_id`
+LEFT JOIN `sma_purchases` ON `sma_purchases`.`id` = `sma_purchase_items`.`purchase_id`  WHERE sma_purchase_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND  sma_purchases.date < '$sdate' AND sma_purchases.date >'2021-09-20 05:00:00'
+GROUP BY `sma_products`.`id` UNION 
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty, 0 as purchaseqty,0 as adjstqty,0 as saleopqty,SUM(COALESCE(sma_purchase_items.quantity, 0 )) as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_purchase_items` ON `sma_products`.`id` = `sma_purchase_items`.`product_id`
+LEFT JOIN `sma_transfers` ON `sma_transfers`.`id` = `sma_purchase_items`.`transfer_id`  WHERE sma_purchase_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53' AND  sma_transfers.date < '$sdate' AND sma_transfers.date >'2021-09-20 05:00:00'
+GROUP BY `sma_products`.`id` UNION 
+SELECT `sma_products`.`id`,unit,sma_products.code,price, sma_products.name ,0 as saleqty, 0 as purchaseqty,0 as adjstqty,0 as saleopqty,0 as purchaseopqty,SUM(IF(sma_adjustments.type='subtraction',sma_adjustments.quantity*-1,sma_adjustments.quantity)) as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_products 
+LEFT JOIN `sma_adjustments` ON `sma_products`.`id` = `sma_adjustments`.`product_id`
+WHERE sma_adjustments.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND  sma_adjustments.date < '$sdate' AND sma_adjustments.date >'2021-09-20 05:00:00'
+GROUP BY `sma_products`.`id` UNION
+SELECT `sma_products`.`portion1` as id,unit,sma_products.portion1 as code,price, sma_products.name ,SUM(COALESCE(sma_products.portion1qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion1`   UNION
+SELECT `sma_products`.`portion2`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_products.portion2qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion2`  UNION 
+SELECT `sma_products`.`portion3`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_products.portion3qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion3`  UNION 
+SELECT `sma_products`.`portion4`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_products.portion4qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion4`  UNION
+SELECT `sma_products`.`portion5`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_products.portion5qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion5`  UNION 
+SELECT `sma_products`.`portion6`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_products.portion6qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion6`  UNION
+SELECT `sma_products`.`portion7`,unit,sma_products.code,price, sma_products.name ,SUM(COALESCE(sma_products.portion7qty*sma_sale_items.quantity, 0 )) as saleqty,0 as purchaseqty,0 as adjstqty, 0 as saleopqty,0 as purchaseopqty,0 as adjstopqty,sma_products.category_id,sma_products.subcategory_id FROM sma_sale_items LEFT JOIN  `sma_products` ON sma_sale_items.product_id = sma_products.id  LEFT JOIN `sma_sales` ON `sma_sales`.`id` = `sma_sale_items`.`sale_id`  WHERE sma_sale_items.product_id IN (SELECT id FROM sma_products WHERE unit = 'cocktail') AND sma_sale_items.warehouse_id = '$warehouseid' AND sma_products.category_id < '57' AND sma_products.category_id <> '53'  AND sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' AND sma_sales.date > '2021-11-13 05:00:00'  GROUP BY `sma_products`.`portion7`) T6 GROUP BY `id`)T8 WHERE id > 0 ORDER BY T8.subcategory_id,T8.id,T8.name   ")->result();
 
+
+
+
+              // die($register_open_time);
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['sheet'] = $result;
+            $this->data['user_id'] = $user_id;
+			$this->data['stdate'] = $edate1;
+			$this->data['warehouse'] = $warehouseid ? $this->site->getWarehouseByID($warehouseid) : NULL;
+             // $this->data['loggeduser'] =  $this->pos_model->getUserByID($user_id);
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'reports/stocksheetmng', $this->data);
+        //}
+    }
 		     function storeStockSheet($user_id)
     {
         
@@ -656,8 +731,8 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
        // if ($this->form_validation->run() == true) {
             
             $data = array('sdate' => $this->input->get('sdate'),);
-			$sdate = date('Y-m-d',strtotime("yesterday")).' 06:00:00';
-			$edate = $this->input->get('sdate').' 05:59:59';
+			$sdate = date('Y-m-d',strtotime("yesterday")).' 12:00:00';
+			$edate = $this->input->get('sdate').' 11:59:59';
 			
         //} else{
           //  $this->session->set_flashdata('error', (validation_errors() ? validation_errors() : $this->session->flashdata('error')));
@@ -1340,12 +1415,12 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
             $department = NULL;
         }
         if ($this->input->get('start_date')) {
-            $start_date = $this->input->get('start_date').' 06:00:00';
+            $start_date = $this->input->get('start_date');
         } else {
             $start_date = NULL;
         }
         if ($this->input->get('end_date')) {
-            $end_date = $this->input->get('end_date').' 05:59:59';
+            $end_date = $this->input->get('end_date');
         } else {
             $end_date = NULL;
         }
@@ -1505,12 +1580,12 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
             $this->load->library('datatables');
            
           $this->datatables
-                ->select("sales.date, sales.id as reference_no,rooms.name as biller, customer, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, '__', " . $this->db->dbprefix('sale_items') . ".quantity) SEPARATOR '___') as iname, grand_total, paid, (grand_total-paid) as balance, IF(grand_total=paid,'paid','due') payment_status,pmethod as paid_by,CONCAT(mpesa_transaction_no,'',cost_center_no,'',cheque_no,'',cc_no) as transaction_no", FALSE)   //paid_by,transaction_id
+                ->select("sales.date, sales.id as reference_no,sales.chef as biller, customer, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, '__', " . $this->db->dbprefix('sale_items') . ".quantity) SEPARATOR '___') as iname, grand_total, paid, (grand_total-paid) as balance, IF(grand_total<=paid,'paid','due') payment_status,pmethod as paid_by,CONCAT(mpesa_transaction_no,'',cost_center_no,'',cheque_no,'',cc_no) as transaction_no", FALSE)   //paid_by,transaction_id
         //         ->select("sales.date, sales.reference_no, biller, customer, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, '__', " . $this->db->dbprefix('sale_items') . ".quantity) SEPARATOR '___') as iname, sum(sma_sale_items.subtotal) as grand_total, '0' as paid, (grand_total-paid) as balance, payment_status,pmethod as paid_by,CONCAT(mpesa_transaction_no,'',cost_center_no,'',cheque_no,'',cc_no) as transaction_no", FALSE)   //paid_by,transaction_id
 				->from('sales')
                 ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
                     ->join('payments', 'payments.sale_id=sales.id', 'left')
-					->join('rooms', 'rooms.id=sales.room_id', 'left')
+					//->join('rooms', 'rooms.id=sales.room_id', 'left')
 					 ->join('products', 'products.id=sale_items.product_id', 'left')
                 ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
                 ->group_by('sales.id');
@@ -1519,7 +1594,7 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
                 $this->datatables->where('sales.created_by', $user);
             }
             if ($product) {
-                $this->datatables->like('sale_items.product_id', $product);
+                $this->datatables->where('sale_items.product_id', $product);
             }
             if ($serial) {
                 $this->datatables->like('sale_items.serial_no', $serial);
@@ -1552,7 +1627,8 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
             }
             if ($start_date) {
                 $this->datatables->where('sma_sales.date BETWEEN "'.$start_date.'" and "'.$end_date.'"');
-            }else {
+            }
+			else {
 				 $this->datatables->where('sma_sales.date BETWEEN "2021-09-21" and "2021-09-21"');
 			}
 
@@ -2451,12 +2527,12 @@ SELECT `sma_products`.`portion7`,unit,sma_products.code, sma_products.name ,SUM(
 
             $this->load->library('datatables');
             $this->datatables
-                ->select($this->db->dbprefix('payments') . ".date, " . $this->db->dbprefix('payments') . ".reference_no as payment_ref, " . $this->db->dbprefix('sales') . ".reference_no as sale_ref, " . $this->db->dbprefix('purchases') . ".reference_no as purchase_ref,companies.name, paid_by, amount, type,users.first_name")
+                ->select($this->db->dbprefix('payments') . ".date, " . $this->db->dbprefix('payments') . ".reference_no as payment_ref, " . $this->db->dbprefix('sales') . ".id as sale_ref, " . $this->db->dbprefix('purchases') . ".reference_no as purchase_ref,sma_companies.name, paid_by, amount, type,sma_users.first_name")
                 ->from('payments')
                 ->join('sales', 'payments.sale_id=sales.id', 'left')
                 ->join('purchases', 'payments.purchase_id=purchases.id', 'left')
                  ->join('companies', 'sales.biller_id=companies.id', 'left')
-                     ->join('users', 'payments.cashier_id=users.id', 'left')
+                     ->join('users', 'payments.created_by =users.id', 'left')
                 ->group_by('payments.id');
 
             if ($user) {

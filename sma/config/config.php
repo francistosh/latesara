@@ -19,8 +19,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 
 
-//$config['site_base'] ='http://192.168.0.103/mpos/';
-$config['site_base'] ='http://192.168.0.125/mpos/';
+$config['site_base'] ='http://192.168.1.10:8000/latesara/';
+//$config['site_base'] ='https://techsavanna.technology/ileplace/';
 //$config['site_base'] = 'http://192.168.43.48/eastbiteposii/';
 /*
 |--------------------------------------------------------------------------
@@ -430,7 +430,7 @@ $config['global_xss_filtering'] = TRUE;
 | 'csrf_regenerate' = Regenerate token on every submission
 | 'csrf_exclude_uris' = Array of URIs which ignore CSRF checks
 */
-$config['csrf_protection'] = TRUE;
+$config['csrf_protection'] = false;
 $config['csrf_token_name'] = 'token';
 $config['csrf_cookie_name'] = 'token_cookie';
 $config['csrf_expire'] = 7200;

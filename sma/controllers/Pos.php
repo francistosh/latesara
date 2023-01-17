@@ -55,14 +55,15 @@ class Pos extends MY_Controller
 
        if (!$this->Owner && !$warehouse_id) {
        $user = $this->site->getUser();
-          $warehouse_id = $user->warehouse_id;
+         $warehouse_id = $user->warehouse_id;
        }
 	   $combine_bill = anchor('pos/combine_bill/$1', '<i class="fa fa-money"></i> Combine Order/Bill' , 'data-toggle="modal" data-target="#myModal"');
         $detail_link = anchor('pos/billview/$1', '<i class="fa fa-file-text-o"></i> Print Bill'/* . lang('view_receipt')*/);
         $payments_link = anchor('sales/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
        // $add_mark_link=anchor('#', '<i class="fa fa-money"></i> Mark Payment' , 'class="markpayment" data-id="$1" onclick="return false"');
         $add_payment_link = anchor('pos/add_payment/$1', '<i class="fa fa-money"></i> Complete Payment' , 'data-toggle="modal" data-target="#myModal"');
-        $add_delivery_link = anchor('sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'),  'data-toggle="modal" data-target="#myModal"');
+        $mpesa_link = anchor('pos/add_mpesa_payment/$1', '<i class="fa fa-money"></i> Mpesa Payment' , 'data-toggle="modal" data-target="#myModal"');
+		$add_delivery_link = anchor('sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'),  'data-toggle="modal" data-target="#myModal"');
         $email_link = anchor('#', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'class="email_receipt" data-id="$1" data-email-address="$2"');
         $edit_link = anchor('sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $return_link = anchor('sales/return_sale/$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
@@ -84,6 +85,7 @@ class Pos extends MY_Controller
             <li>' . $email_link . '</li>
             <li>' . $return_link . '</li>
             <li>' . $delete_link . '</li>
+			 <li>' . $mpesa_link . '</li>
            
         </ul>
     </div></div>';
@@ -107,8 +109,8 @@ class Pos extends MY_Controller
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-			<li>' . $add_payment_link . ' <br></li>
-            <li>' . $detail_link . '<br></li>
+            <li>'.$combine_bill.'<br></li>
+			 <li>' . $detail_link . '<br></li>
             <li>' . $payments_link . ' <br></li>
 
         </ul>
@@ -119,20 +121,22 @@ class Pos extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select($this->db->dbprefix('sales').".id as id, date, sales.id as reference_no, chef, table_id,GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, ' (', " . $this->db->dbprefix('sale_items') . ".quantity, ')') SEPARATOR '\n') as iname, grand_total, paid, (grand_total-paid) as balance, payment_status, companies.email as cemail")
+                ->select($this->db->dbprefix('sales').".id as id, date, ".$this->db->dbprefix('sales').".id as reference_no, ".$this->db->dbprefix('sales').".chef, ".$this->db->dbprefix('sales').".table_id,".$this->db->dbprefix('warehouses').".name,GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, ' (', " . $this->db->dbprefix('sale_items') . ".quantity, ')') SEPARATOR '\n') as iname, ".$this->db->dbprefix('sales').".grand_total, ".$this->db->dbprefix('sales').".paid, (".$this->db->dbprefix('sales').".grand_total-".$this->db->dbprefix('sales').".paid) as balance, ".$this->db->dbprefix('sales').".payment_status, companies.email as cemail")
                 ->from('sales')
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
 				->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
-               ->where('sales.warehouse_id', $warehouse_id)
+				->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+               //->where('sales.warehouse_id', $warehouse_id)
 			   ->where('sales.payment_status <> "paid"')
                 ->group_by('sales.id');
         } else {
             $this->datatables
-                ->select($this->db->dbprefix('sales').".id as id, date, sales.id as reference_no, chef, table_id,GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, ' (', " . $this->db->dbprefix('sale_items') . ".quantity, ')') SEPARATOR '\n') as iname, grand_total, paid, (grand_total-paid) as balance, payment_status, companies.email as cemail")
+                ->select($this->db->dbprefix('sales').".id as id, date, ".$this->db->dbprefix('sales').".id as reference_no, ".$this->db->dbprefix('sales').".chef, ".$this->db->dbprefix('sales').".table_id,".$this->db->dbprefix('warehouses').".name,GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('sale_items') . ".product_name, ' (', " . $this->db->dbprefix('sale_items') . ".quantity, ')') SEPARATOR '\n') as iname, ".$this->db->dbprefix('sales').".grand_total, ".$this->db->dbprefix('sales').".paid, (".$this->db->dbprefix('sales').".grand_total-".$this->db->dbprefix('sales').".paid) as balance, ".$this->db->dbprefix('sales').".payment_status, sma_companies.email as cemail")
                 ->from('sales')
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
 				->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
-				//->where('sales.payment_status <> "paid"')
+				->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+				->where('sales.payment_status <> "paid"')
                 ->group_by('sales.id');
         }
         $this->datatables->where('pos', 1);
@@ -930,6 +934,7 @@ class Pos extends MY_Controller
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
         $this->data['rows'] = $this->pos_model->getAllInvoiceItems($sale_id);
+        $this->pos_model->updatePrintSale($sale_id);
         $inv = $this->pos_model->getInvoiceByID($sale_id);
         $biller_id = $inv->biller_id;
         $customer_id = $inv->customer_id;
@@ -957,11 +962,13 @@ class Pos extends MY_Controller
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
         $this->data['rows'] = $this->pos_model->getAllInvoiceItems($sale_id);
+        $this->pos_model->updatePrintSale($sale_id);
         $inv = $this->pos_model->getInvoiceByID($sale_id);
-		$this->pos_model->updatePrintSale($sale_id);
+		
         $biller_id = $inv->biller_id;
         $customer_id = $inv->customer_id;
 		$warehouse_id = $inv->warehouse_id;
+		$printid = $inv->printed;
 		$this->data['warehousename'] = $this->site->getWarehouseByID($warehouse_id) ;
         $this->data['biller'] = $this->pos_model->getCompanyByID($biller_id);
         $this->data['customer'] = $this->pos_model->getCompanyByID($customer_id);
@@ -979,17 +986,19 @@ class Pos extends MY_Controller
     {
         $this->sma->checkPermissions('index');
        if ($this->input->get('startdate')) {
-            $sdate = $this->input->get('startdate').' 06:00:00';
+            $sdate = $this->input->get('startdate').' 10:00:00';
         } 
 		if ($this->input->get('todate')) {
-            $tdate = $this->input->get('todate').' 05:59:59';
+            $tdate = $this->input->get('todate').' 09:59:59';
         } 
+		$warehouseid = $this->input->get('warehouseid');
 		$user_id = $this->session->userdata('user_id');
 		$this->data['users'] = $this->pos_model->getUserByID($user_id);
         $this->load->helper('text');
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
-        $this->data['rows'] = $this->pos_model->getAllprdctsales($sdate,$tdate);
+        $this->data['rows'] = $this->pos_model->getAllprdctsales($sdate,$tdate,$warehouseid);
+		$this->data['warehouse'] = $this->site->getWarehouseByID($warehouseid);
 		$this->data['start'] = $sdate;
 		$this->data['end'] = $tdate;
                $this->data['pos'] = $this->pos_model->getSetting();
@@ -1001,10 +1010,10 @@ class Pos extends MY_Controller
     {
         $this->sma->checkPermissions('index');
        if ($this->input->get('startdate')) {
-            $sdate = $this->input->get('startdate').' 06:00:00';
+            $sdate = $this->input->get('startdate').' 07:00:00';
         } 
 		if ($this->input->get('todate')) {
-            $tdate = $this->input->get('todate').' 05:59:59';
+            $tdate = $this->input->get('todate').' 06:59:59';
         } 
 		$user_id = $this->session->userdata('user_id');
 		$this->data['users'] = $this->pos_model->getUserByID($user_id);
@@ -1012,6 +1021,7 @@ class Pos extends MY_Controller
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
         $this->data['rows'] = $this->pos_model->getPaymntTypesales($sdate,$tdate);
+		$this->data['barduesales'] = $this->pos_model->getUpaidsales_departmentwise($sdate,$tdate,'Bar');
 		$this->data['barsales'] = $this->pos_model->getPaymntTypesales_departmentwise($sdate,$tdate,'Bar');
 		 $this->data['restsales'] = $this->pos_model->getPaymntTypesales_departmentwise($sdate,$tdate,'Rest');
 		  $this->data['servicesales'] = $this->pos_model->getPaymntTypesales_departmentwise($sdate,$tdate,'Service');
@@ -1030,8 +1040,8 @@ class Pos extends MY_Controller
        if ($this->input->get('tableid')) {
             $tableid = $this->input->get('tableid');
         } 
-		$sdate = date('Y-m-d').' 06:00:00';
-		$edate = date('Y-m-d',strtotime('tomorrow')).' 05:59:59';
+		$sdate = date('Y-m-d',strtotime('yesterday')).' 10:00:00';
+		$edate = date('Y-m-d',strtotime('tomorrow')).' 09:59:59';
 		$user_id = $this->session->userdata('user_id');
 		$this->data['soldby'] = $this->pos_model->getUserByID($user_id);
         $this->load->helper('text');
@@ -1434,6 +1444,175 @@ class Pos extends MY_Controller
         }
     }
 
+	    function add_mpesa_payment($id = NULL)
+    {
+       // $this->sma->checkPermissions('payments', true);
+        $this->load->helper('security');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->form_validation->set_rules('reference_no', lang("reference_no"), 'required');
+        $this->form_validation->set_rules('amount-paid', lang("amount"), 'required');
+		$this->form_validation->set_rules('whole-amount-paid', lang("amount"), 'required');
+        $this->form_validation->set_rules('paid_by', lang("paid_by"), 'required');
+		if($this->input->post('paid_by') == 'M-pesa'){
+			$this->form_validation->set_rules('mpesa_txn_no', lang("mpesa_txn_no"), 'required');
+			$amount = $this->input->post('amount-paid');
+			$bill_change = ($this->input->post('whole-amount-paid'))-($this->input->post('amount-paid'));
+		}
+		
+		else{
+			$amount = $this->input->post('amount-paid');
+			$bill_change = ($this->input->post('whole-amount-paid'))-($this->input->post('amount-paid'));
+		}
+        //$this->form_validation->set_rules('note', lang("note"), 'xss_clean');
+        $this->form_validation->set_rules('userfile', lang("attachment"), 'xss_clean');
+        if ($this->form_validation->run() == true) {
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('date')));
+            } else {
+                $date = date('Y-m-d H:i:s');
+            }
+            $payment = array(
+                'date' => $date,
+                'sale_id' => $this->input->post('sale_id'),
+                'reference_no' => $this->input->post('reference_no'),
+                'amount' => $amount,
+                'bill_change' => $bill_change,
+                'paid_by' => $this->input->post('paid_by'),
+                'rmk' => $remark,
+                'chef_id' => $this->input->post('chef_id'),
+                'chef' => $this->input->post('chef'),
+                
+                'cashier_id' => $this->input->post('cashier_id'),
+                'cashier' => $this->input->post('cashier'),
+                'room_id' => $this->input->post('room_no'),
+                'mpesa_transaction_no' => $this->input->post('mpesa_txn_no'),
+                'cost_center_no' => $this->input->post('cost_center_no'),
+                'cheque_no' => $this->input->post('cheque_no'),
+                'cc_no' => $this->input->post('paid_by') == 'gift_card' ? $this->input->post('gift_card_no') : $this->input->post('pcc_no'),
+                'cc_holder' => $this->input->post('pcc_holder'),
+                'cc_month' => $this->input->post('pcc_month'),
+                'cc_year' => $this->input->post('pcc_year'),
+                'cc_type' => $this->input->post('pcc_type'),
+                'cc_cvv2' => $this->input->post('pcc_ccv'),
+                'note' => $this->input->post('note'),
+                'created_by' => $this->session->userdata('user_id'),
+                'type' => 'received'
+            );
+
+            if ($_FILES['userfile']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path'] = $this->digital_upload_path;
+                $config['allowed_types'] = $this->digital_file_types;
+                $config['max_size'] = $this->allowed_file_size;
+                $config['overwrite'] = FALSE;
+                $config['encrypt_name'] = TRUE;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER["HTTP_REFERER"]);
+                }
+                $photo = $this->upload->file_name;
+                $payment['attachment'] = $photo;
+            }
+
+            //$this->sma->print_arrays($payment);
+
+        } elseif ($this->input->post('add_payment')) {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER["HTTP_REFERER"]);
+        }
+		
+
+        if ($this->input->post('paid_by') != 'rooms' && $this->form_validation->run() == true && $msg = $this->pos_model->addPayment($payment)) {
+            if ($msg) {
+                if ($msg['status'] == 0) {
+                    $error = '';
+                    foreach ($msg as $m) {
+                        $error .= '<br>' . (is_array($m) ? print_r($m, true) : $m);
+                    }
+                    $this->session->set_flashdata('error', '<pre>' . $error . '</pre>');
+                } else {
+                    $this->session->set_flashdata('message', lang("payment_added"));
+                 //update online
+                 $url = "https://techsavanna.technology/sipit/mpesa/";
+
+$curl = curl_init($url);
+curl_setopt($curl, CURLOPT_URL, $url);
+curl_setopt($curl, CURLOPT_PUT, true);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+$headers = array(
+   "Content-Type: application/json",
+);
+curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+$data = <<<DATA
+{
+  "Id": QF70B0Q4KY,
+  "status": 1
+}
+DATA;
+
+curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+
+//for debug only!
+curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+$resp = curl_exec($curl);
+curl_close($curl);
+var_dump($resp);
+                 //endd update here
+            redirect("pos/view_complete/".$msg['sale_id']);
+                }
+            } else {
+                $this->session->set_flashdata('error', lang("payment_failed"));
+            }
+            redirect("pos/sales");
+        } else if($this->input->post('paid_by') == 'rooms' && $this->form_validation->run() == true ){
+			$msg = $this->pos_model->updateroomId($payment,$custid);
+			 if ($msg) {
+                if ($msg['status'] == 0) {
+                    $error = '';
+                    foreach ($msg as $m) {
+                        $error .= '<br>' . (is_array($m) ? print_r($m, true) : $m);
+                    }
+                    $this->session->set_flashdata('error', '<pre>' . $error . '</pre>');
+                } else {
+                    $this->session->set_flashdata('message', lang("payment_added"));
+                 
+            redirect("pos/view_complete/".$msg['sale_id']);
+                }
+            } else {
+                $this->session->set_flashdata('error', lang("payment_failed"));
+            }
+            redirect("pos/sales");
+		} else {
+$result=$this->db->query("select name from sma_companies where customer_group_name like '%corporate%' ORDER by name ")->result();
+
+  $this->data["costcenter"]= $result;
+  $query2 =$this->db->query("select id,first_name from sma_users where is_service = '1' ")->result();
+  $this->data["servicestaff"]= $query2;
+  //$this->data['rooms'] = $this->site->getAllRooms();
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+			$sdate = date('Y-m-d');
+$result12=$this->db->query("SELECT sma_rooms.name,T1.st AS status,sma_rooms.id,T1.cust_id AS cust_id  FROM (SELECT sma_rooms.name,sma_roomstats.check_in,sma_roomstats.check_out,sma_roomstats.`status` ,IF( '$sdate' >= sma_roomstats.check_in AND '$sdate' < sma_roomstats.check_out ,sma_roomstats.status,'Vacant') AS st,sma_rooms.id,sma_roomstats.cust_id  
+FROM sma_rooms  LEFT JOIN sma_roomstats ON sma_roomstats.room_id = sma_rooms.id 
+WHERE  ('$sdate' >= sma_roomstats.check_in AND  '$sdate' < sma_roomstats.check_out) ) AS T1 RIGHT JOIN sma_rooms ON sma_rooms.id = T1.id")->result();
+			$this->data['rooms'] = $result12;
+            $sale = $this->pos_model->getInvoiceByID($id);
+            $this->data['inv'] = $sale;
+            $this->data['payment_ref'] = $this->site->getReference('pay');
+            $this->data['modal_js'] = $this->site->modal_js();
+
+            $this->load->view($this->theme . 'pos/add_mpesapayment', $this->data);
+        }
+    }
+	
 	
     function add_payment($id = NULL)
     {

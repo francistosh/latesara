@@ -78,11 +78,10 @@ if ($modal) {
         <div class="text-center">
           <!--    <img src="<?//= base_url() . 'assets/uploads/logos/' . $biller->logo; ?>" alt="<?//= $biller->company; ?>">
 <!--            <h3 style="text-transform:uppercase;"><b>$inv->id$biller->company != '-' ? $biller->company : $biller->name; ?></b></h3>-->
-             <h5 style="text-transform:uppercase;"><b><?= $biller->company != '-' ? $biller->company : $biller->name; ?></b></h5>
-				<h6 >P.O BOX 2606, 80100 MOMBASA</h6>
-				<h6 >Tel No: 0728 975 593 <h6 >
-				<h6 >P.I.N : P051421403M<h6 >
- 
+             <h5 style="text-transform:uppercase;font-size:16px"><b><?= $biller->company != '-' ? $biller->company : $biller->name; ?></b></h5>
+				<h6 >NAIROBI</h6>
+				<h6 >0715 445 758<h6 >
+				
             <?php
            //echo "<br>" . lang("tel") . ": " . $biller->phone . "<br>";
             ?>
@@ -106,10 +105,10 @@ if ($modal) {
            // echo lang("customer") . ": " . $inv->customer . "   -    "."No of Customer(s) : ". $inv->count_cust.  "<br>";
            // echo "Cashier" . ": " . $inv->cashier . "</br>";
            // echo "Chef" . ": " . $inv->chef . "</br>";
-            echo lang("date") . ": " . $this->sma->hrld($inv->date);
+            echo "<span style='font-size:14px'>".lang("date") . ": <b>" . $this->sma->hrld($inv->date)."</b>";
            echo  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		   Bill No: ". $inv->id."</p>";
+		   Bill No: <b>". $inv->id."</b></p></span>";
             ?>
             <div style="clear:both;"></div>
             <table class="table table-striped table-condensed">
@@ -153,10 +152,10 @@ if ($modal) {
                 <?php
                 //if ($inv->product_tax != 0) {
 					
-                    echo '<tr><th colspan="4" style="text-align:right;font-size:11px">' . lang("Sub Total") . '</th><th class="text-right" style="font-size:11px">' . $this->sma->formatMoney($inv->grand_total- $inv->product_tax - (0.02 * $inv->grand_total +($inv->grand_total*0.16)) ) . '</th></tr>';
+                    echo '<tr><th colspan="4" style="text-align:right;font-size:11px">' . lang("Sub Total") . '</th><th class="text-right" style="font-size:11px">' . $this->sma->formatMoney($inv->grand_total- $inv->product_tax - ($inv->grand_total*0.16) ) . '</th></tr>';
                     echo '<tr ><td colspan="4" style="text-align:right; font-size:11px" >' . lang("VAT 16%") . '</td><td class="text-right" style="font-size:11px">' . $this->sma->formatMoney($inv->grand_total*0.16) . '</td></tr>';
 					// echo '<tr ><td colspan="4"><i>All prices are VAT inclusive</i></td></tr>';
-                    echo '<tr><td colspan="4" style="text-align:right;font-size:11px">' . lang("Catering Levy 2%") . '</td><td class="text-right" style="font-size:11px">' . $this->sma->formatMoney(0.02 * $inv->grand_total) . '</td></tr>';
+                    //echo '<tr><td colspan="4" style="text-align:right;font-size:11px">' . lang("Catering Levy 2%") . '</td><td class="text-right" style="font-size:11px">' . $this->sma->formatMoney(0.02 * $inv->grand_total) . '</td></tr>';
                
 
 				//}
@@ -185,7 +184,7 @@ if ($modal) {
 
                 <?php }
 				
-  echo '<p>You were served by : '.$soldby->first_name.'&nbsp;</p>';
+  echo '<p style="font-size:14px">Served by : <b>'.$soldby->first_name.'&nbsp;</b></p>';
    echo 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<br>';
 			
                  ?>
@@ -193,8 +192,11 @@ if ($modal) {
                         <th><?= "<b>Total Paid</b>"; ?></th>
                         <th class="text-right"><?= $this->sma->formatMoney($inv->bill_change+$inv->paid); ?></th>
                   </tr>-->
-				  
-                 <tr style="font-size:15px"><td colspan="2"><br>Room No: _______________</td><td align="center" colspan="2"><br>Sign: _______________</td><td></td></tr>
+				   <tr style="font-size:15px"><td colspan="2"><br>Mpesa Till No:  9754369</td><td align="center" colspan="2"><br></td><td></td></tr>
+				   <?php if ($inv->printed =='1'){?>
+            <tr style="font-size:15px; font-family: "Comic Sans MS", "Comic Sans", cursive;"><td colspan="5" align="center"><br><i><b>RE-PRINT COPY</b></i></td></tr>
+            <?php } ?>
+                 <!-- <tr style="font-size:15px"><td colspan="2"><br>Room No: _______________</td><td align="center" colspan="2"><br>Sign: _______________</td><td></td></tr> -->
                 </tfoot>
             </table>
 			

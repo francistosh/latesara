@@ -79,11 +79,20 @@ if (!empty($variants)) {
                         <?= lang("product_name", "name") ?>
                         <?= form_input('name', (isset($_POST['name']) ? $_POST['name'] : ($product ? $product->name : '')), 'class="form-control" id="name" required="required"'); ?>
                     </div>
-					<div class="form-group all">
+					 <div class="form-group all">
                         <?= lang("product_code", "code") ?>
-                        <?= form_input('code', (isset($_POST['code']) ? $_POST['code'] : ($lastid->id)), 'class="form-control" id="code"  required="required" readonly') ?>
+                        <?= form_input('code', (isset($_POST['code']) ? $_POST['code'] : ($lastid->id)), 'class="form-control" id="code"  required="required"') ?>
                         <span class="help-block"><?= lang('you_scan_your_barcode_too') ?></span>
                     </div>
+					<!--<div class="form-group all">
+                        <?
+						//= lang("product_code", "code") 
+						?>
+                        <?
+						//= form_input('code', (isset($_POST['code']) ? $_POST['code'] : ($lastid->id)), 'class="form-control" id="code"  required="required" readonly') ?>
+                        <span class="help-block"><?
+						//= lang('you_scan_your_barcode_too') ?></span>
+                    </div>-->
                     <div class="form-group all">
                         <?= lang("barcode_symbology", "barcode_symbology") ?>
                         <?php

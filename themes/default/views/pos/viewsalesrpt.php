@@ -153,6 +153,12 @@ if ($modal) {
 					echo '<td>&nbsp' . number_format($row->amnt) . '</td></tr>';
 					                }
 				}
+				foreach ($barduesales as $roww) {
+				   	echo '<tr style="font-size:15px"><td colspan="2">#:&nbsp;&nbsp; Due'  ;
+                  
+					echo '<td>&nbsp' . number_format($roww->amnt) . '</td></tr>'; 
+					$totalbar = $totalbar + $roww->amnt;
+				}
                 ?>
 			<tr><td style="text-align:center;border-color: black !important;" border="1" colspan="2"><b>Bar Total </b></td><td align="centre" style="border-color: black !important;" border="1"><?php echo number_format($totalbar) ; ?></td></tr>
 				<tr><td style="text-align:center;border-color: black !important;" colspan="3"  border="1">Restaurant</td></tr>

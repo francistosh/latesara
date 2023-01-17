@@ -205,18 +205,7 @@ if ($this->input->post('end_date')) {
                                 </div>
                         </div>
 
-                        <div class="col-sm-4" style="display:none">
-                            <div class="form-group">
-                                <label class="control-label" for="user"><?= lang("created_by"); ?></label>
-                                <?php
-                                $us[""] = "";
-                                foreach ($users as $user) {
-                                    $us[$user->id] = $user->first_name . " " . $user->last_name;
-                                }
-                                echo form_dropdown('user', $us, (isset($_POST['user']) ? $_POST['user'] : ""), 'class="form-control" id="user" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("user") . '"');
-                                ?>
-                            </div>
-                        </div>
+                        
                         <div class="col-sm-4"  style="display:none">
                             <div class="form-group">
                                 <label class="control-label" for="customer"><?= lang("customer"); ?></label>
@@ -259,18 +248,31 @@ if ($this->input->post('end_date')) {
                                
                             </div>
                         <?php } ?>
+						<div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="user"><?= lang("created_by"); ?></label>
+                                <?php
+                                $us[""] = "";
+                                foreach ($users as $user) {
+                                    $us[$user->id] = $user->first_name . " " . $user->last_name;
+                                }
+                                echo form_dropdown('user', $us, (isset($_POST['user']) ? $_POST['user'] : ""), 'class="form-control" id="user" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("user") . '"');
+                                ?>
+                            </div>
+                        </div>
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <?= lang("start_date", "start_date"); ?>
-                                <?php echo form_input('start_date', (isset($_POST['start_date']) ? $_POST['start_date'] : ""), 'class="form-control date" id="start_date"'); ?>
+                                <?php echo form_input('start_date', (isset($_POST['start_date']) ? $_POST['start_date'] : ""), 'class="form-control datetime" id="start_date" autocomplete="off"'); ?>
                             </div>
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <?= lang("end_date", "end_date"); ?>
-                                <?php echo form_input('end_date', (isset($_POST['end_date']) ? $_POST['end_date'] : ""), 'class="form-control date" id="end_date"'); ?>
+                                <?php echo form_input('end_date', (isset($_POST['end_date']) ? $_POST['end_date'] : ""), 'class="form-control datetime" id="end_date" autocomplete="off"'); ?>
                             </div>
                         </div>
+						
                     </div>
                     <div class="form-group">
                         <div

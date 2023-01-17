@@ -208,7 +208,7 @@ class Pos_model extends CI_Model
         }
         return FALSE;
     }
-
+    
     public function updateOptionQuantity($option_id, $quantity)
     {
         if ($option = $this->getProductOptionByID($option_id)) {
@@ -886,12 +886,13 @@ $array=array();
         }
         return FALSE;
     }
-	  public function getAllprdctsales($sdate,$tdate)
+	  public function getAllprdctsales($sdate,$tdate,$warehouseid)
     {
         $this->db->select('product_name, sma_sales.pmethod ,SUM(sma_sale_items.quantity) AS QTY')
             ->join('sale_items', 'sale_items.sale_id = sales.id', 'left')
 			->join('products', 'products.id = sale_items.product_id')
 			->where("date >= '$sdate' and date <= '$tdate'")
+			->where("sma_sales.warehouse_id = '$warehouseid'")
 			->where("pos ='1'")
             ->group_by('product_id')
             ->order_by('products.category_id', 'asc');
@@ -921,11 +922,40 @@ $array=array();
         }
         return FALSE;
     }
+	public function getUpaidsales_departmentwise($sdate,$tdate,$department)
+    {
+		//CHECK DETAILS ON CATEGORIES TABLE
+		if($department=="Bar"){
+			$filter = "";
+		}else if($department=="Rest") {
+			$filter = "and sma_products.category_id = '57'";
+		}else{
+			$filter = "and sma_products.category_id = '53'";
+		}
+$q = $this->db->query("SELECT SUM(amount) AS amnt,paid_by FROM 
+(SELECT sma_sales.total as amount,'' as paid_by 
+FROM sma_sales 
+LEFT JOIN sma_sale_items ON sma_sales.id = sma_sale_items.sale_id 
+LEFT JOIN sma_products ON sma_products.id = sma_sale_items.product_id 
+WHERE sma_sales.date >= '$sdate' and sma_sales.date <= '$tdate'
+$filter AND pos = '1' AND sma_sales.pmethod =''  GROUP BY sma_sales.id )as t7 GROUP BY t7.paid_by ");
+
+			
+			
+		
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return FALSE;
+    }
 	public function getPaymntTypesales_departmentwise($sdate,$tdate,$department)
     {
 		//CHECK DETAILS ON CATEGORIES TABLE
 		if($department=="Bar"){
-			$filter = "and sma_products.category_id <> '57' AND sma_products.category_id > '53' ";
+			$filter = "";
 		}else if($department=="Rest") {
 			$filter = "and sma_products.category_id = '57'";
 		}else{
@@ -955,7 +985,7 @@ $filter AND pos = '1' GROUP BY sma_payments.id )as t7 GROUP BY t7.paid_by ");
     {
 		//CHECK DETAILS ON CATEGORIES TABLE
 		if($department=="Bar"){
-			$filter = "and sma_products.category_id <> '57' AND sma_products.category_id > '53' ";
+			$filter = "and sma_products.category_id <> '57'  ";
 		}else if($department=="Rest") {
 			$filter = "and sma_products.category_id = '57'";
 		}else{
@@ -963,7 +993,7 @@ $filter AND pos = '1' GROUP BY sma_payments.id )as t7 GROUP BY t7.paid_by ");
 		}
 $q = $this->db->query("SELECT * FROM `sma_sales` 
 LEFT JOIN sma_sale_items ON sma_sales.id = sma_sale_items.sale_id 
-WHERE sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' 
+WHERE sma_sales.date <= '$edate' 
 AND sma_sales.table_id = '$tableid' AND sma_sales.created_by = '$user_id' AND sma_sales.payment_status <> 'paid'  ");
 
 			
@@ -989,7 +1019,7 @@ AND sma_sales.table_id = '$tableid' AND sma_sales.created_by = '$user_id' AND sm
 		}
 $q = $this->db->query("SELECT sma_sales.id FROM `sma_sales` 
 LEFT JOIN sma_sale_items ON sma_sales.id = sma_sale_items.sale_id 
-WHERE sma_sales.date >= '$sdate' AND sma_sales.date <= '$edate' 
+WHERE sma_sales.date <= '$edate' 
 AND sma_sales.table_id = '$tableid' AND sma_sales.created_by = '$user_id' AND sma_sales.payment_status <> 'paid' GROUP BY sma_sales.id ");
 
 			
@@ -1003,6 +1033,7 @@ AND sma_sales.table_id = '$tableid' AND sma_sales.created_by = '$user_id' AND sm
         }
         return FALSE;
     }
+	
     public function getSuspendedSaleItems($id)
     {
         $q = $this->db->get_where('suspended_items', array('suspend_id' => $id));
@@ -1818,7 +1849,7 @@ AND sma_sales.table_id = '$tableid' AND sma_sales.created_by = '$user_id' AND sm
        }
       return FALSE;
     }
-	   function updateReceptionPayment($payment = array())
+function updateReceptionPayment($payment = array())
     {
       // print_r($payment);  
        //die();
@@ -1830,18 +1861,19 @@ AND sma_sales.table_id = '$tableid' AND sma_sales.created_by = '$user_id' AND sm
         if ($q->num_rows() > 0) {
             $status="";
             //get total amount
-              $amount=$q->row()->paid + $payment['amount'];
-             if($q->row()->grand_total <=$amount){
+              $bal_amount= $q->row()->grand_total - $q->row()->paid;
+			  // $payment['amount']
+             if( $payment['amount'] >= $bal_amount){
             $status="paid";
-             }else if($q->row()->grand_total > $amount){
+			$q=$this->db->query('UPDATE sma_sales SET cleared="1" , paid = paid + '.$payment['amount'].'
+                             WHERE id='.$payment['sale_id']);
+             }else if($payment['amount'] <$bal_amount){
                 $status="due";
+				$q=$this->db->query('UPDATE sma_sales SET  paid = paid + '.$payment['amount'].'
+                             WHERE id='.$payment['sale_id']);
              }else if($q->row()->grand_total > $amount){
                  $status="partial";
              }
-      
-					
-                    $q=$this->db->query('UPDATE sma_sales SET cleared="1"
-                             WHERE id='.$payment['sale_id']);
 					
 
         } 

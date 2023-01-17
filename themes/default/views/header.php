@@ -209,9 +209,11 @@
                         </li>
                         <?php if ($Owner) { ?>
                             <li class="dropdown">
-                                <a class="btn bdarkGreen tip" id="today_profit" title="<span><?= lang('today_profit') ?></span>" data-placement="bottom" data-html="true" href="<?= site_url('pos/today_profit') ?>" data-toggle="modal" data-target="#myModal">
-                                    <i class="fa fa-hourglass-2"></i>
-                                </a>
+                                <a class="btn bblue tip"
+                                                              title="<?= lang('list_open_registers') ?>"
+                                                              data-placement="bottom"
+                                                              href="<?= site_url('pos/registers') ?>"><i
+                                        class="fa fa-hourglass-2"></i></a>
                             </li>
                         <?php } ?>
                     <?php } ?>
@@ -222,6 +224,7 @@
                                                               data-placement="bottom"
                                                               href="<?= site_url('pos/sales') ?>"><i
                                         class="fa fa-list"></i></a></li>
+                                        
                         <?php } ?>
                         <li class="dropdown hidden-xs"><a class="btn bred tip" title="<?= lang('clear_ls') ?>"
                                                           data-placement="bottom" id="clearLS" href="#"><i
@@ -294,6 +297,10 @@
                                         <li id="pos_sales"><a class="submenu" href="<?= site_url('pos/sales'); ?>"><i
                                                     class="fa fa-heart"></i><span
                                                     class="text"> <?= lang('pos_sales'); ?></span></a></li>
+                                                    <li id="voucher_add"><a class="submenu"
+                                                          href="<?= site_url('sales/guests'); ?>"><i
+                                                    class="fa fa-plus-circle"></i><span
+                                                    class="text"> <?= lang('Credit_Customers'); ?></span></a></li>
                                                       <?php
                         if ($Owner || $Admin) {?>
                            <li id="pos_sales"><a class="submenu" href="<?= site_url('pos/deletedsales'); ?>"><i
@@ -515,10 +522,14 @@
                                             href="<?= site_url('reports/quantity_alerts') ?>"><i
                                                 class="fa fa-bar-chart-o"></i><span
                                                 class="text"> <?= lang('product_quantity_alerts'); ?></span></a></li>
-								    <li id="reports_quantity_alerts"><a
-                                            href="<?= site_url('reports/stock') ?>"><i
+								    <li id="reports_quantity_alerts" style="display:none"><a
+                                            href="<?= site_url('reports/stockSheetmngnt1/?user='.$this->session->userdata('user_id').'&sdate='.date('Y-m-d')) ?>"><i
                                                 class="fa fa-bar-chart-o"></i><span
                                                 class="text"> <?= "Stock Management" ?></span></a></li>
+									<li id="customers_index"><a class="submenu" href="<?= site_url('customers/stockmm'); ?>"
+                                                                data-toggle="modal" data-target="#myModal"><i
+                                                class="fa fa-plus-circle"></i><span
+                                                class="text"> <?= lang('Stock Management'); ?></span></a></li>		
                                     <?php if ($this->Settings->product_expiry) { ?>
                                         <li id="reports_expiry_alerts"><a
                                             href="<?= site_url('reports/expiry_alerts') ?>"><i
@@ -898,3 +909,4 @@
                             }
                         } ?>
                         <div id="alerts"></div>
+			

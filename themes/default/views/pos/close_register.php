@@ -11,6 +11,8 @@
         ?>
         <div class="modal-body">
             <div id="alerts"></div>
+
+            <?php if ($Owner || $Admin) { ?>
             <table width="100%" class="stable">
                 <tr>
                     <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_in_hand'); ?>:</h4></td>
@@ -111,7 +113,7 @@
                         <?= form_hidden('total_cash', $total_cash); ?>
                         <?= form_input('total_cash_submitted', (isset($_POST['total_cash_submitted']) ? $_POST['total_cash_submitted'] : $total_cash), 'class="form-control input-tip" id="total_cash_submitted" required="required"'); ?>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group hidden">
                         <?= lang("total_cheques", "total_cheques_submitted"); ?>
                         <?= form_hidden('total_cheques', $chsales->total_cheques); ?>
                         <?= form_input('total_cheques_submitted', (isset($_POST['total_cheques_submitted']) ? $_POST['total_cheques_submitted'] : $chsales->total_cheques), 'class="form-control input-tip" id="total_cheques_submitted" required="required"'); ?>
@@ -146,6 +148,55 @@
                 <div
                     class="controls"> <?= form_textarea('note', (isset($_POST['note']) ? $_POST['note'] : ""), 'class="form-control" id="note" style="margin-top: 10px; height: 100px;"'); ?> </div>
             </div>
+
+            <?php } else {?>
+
+                <hr>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group hidden">
+                        <?= lang("total_cash", "total_cash_submitted"); ?>
+                        <?php $total_cash = ($cashsales->paid ? $cashsales->paid + ($cash_in_hand ? $cash_in_hand : $this->session->userdata('cash_in_hand')) - $expense - ($cashrefunds->returned ? $cashrefunds->returned : 0) : (($cash_in_hand ? $cash_in_hand : $this->session->userdata('cash_in_hand')) - $expense)); ?>
+                        <?= form_hidden('total_cash', $total_cash); ?>
+                        <?= form_input('total_cash_submitted', (isset($_POST['total_cash_submitted']) ? $_POST['total_cash_submitted'] : $total_cash), 'class="form-control input-tip" id="total_cash_submitted" required="required"'); ?>
+                    </div>
+                    <div class="form-group hidden">
+                        <?= lang("total_cheques", "total_cheques_submitted"); ?>
+                        <?= form_hidden('total_cheques', $chsales->total_cheques); ?>
+                        <?= form_input('total_cheques_submitted', (isset($_POST['total_cheques_submitted']) ? $_POST['total_cheques_submitted'] : $chsales->total_cheques), 'class="form-control input-tip" id="total_cheques_submitted" required="required"'); ?>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <?php if ($suspended_bills) { ?>
+                        <div class="form-group hidden">
+                            <?= lang("transfer_opened_bills", "transfer_opened_bills"); ?>
+                            <?php $u = $user_id ? $user_id : $this->session->userdata('user_id');
+                            $usrs[-1] = lang('delete_all');
+                            $usrs[0] = lang('leave_opened');
+                            foreach ($users as $user) {
+                                if ($user->id != $u) {
+                                    $usrs[$user->id] = $user->first_name . ' ' . $user->last_name;
+                                }
+                            }
+                            ?>
+                            <?= form_dropdown('transfer_opened_bills', $usrs, (isset($_POST['transfer_opened_bills']) ? $_POST['transfer_opened_bills'] : 0), 'class="form-control input-tip" id="transfer_opened_bills" required="required"'); ?>
+                        </div>
+                    <?php } ?>
+                    <div class="form-group hidden">
+                        <?= lang("total_cc_slips", "total_cc_slips_submitted"); ?>
+                        <?= form_hidden('total_cc_slips', $ccsales->total_cc_slips); ?>
+                        <?= form_input('total_cc_slips_submitted', (isset($_POST['total_cc_slips_submitted']) ? $_POST['total_cc_slips_submitted'] : $ccsales->total_cc_slips), 'class="form-control input-tip" id="total_cc_slips_submitted" required="required"'); ?>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group hidden">
+                <label for="note"><?= lang("note"); ?></label>
+
+                <div
+                    class="controls"> <?= form_textarea('note', (isset($_POST['note']) ? $_POST['note'] : ""), 'class="form-control" id="note" style="margin-top: 10px; height: 100px;"'); ?> </div>
+            </div>
+
+                <?php } ?>
 
         </div>
         <div class="modal-footer">

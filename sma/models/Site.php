@@ -194,8 +194,8 @@ class Site extends CI_Model
     }
 		public function getproductqtybywarehouse($pro,$warehouse) {
 			
-			$sdate = date('Y-m-d').' 06:00:00';
-			$edate = date('Y-m-d',strtotime("tomorrow")).' 05:59:59';
+			$sdate = date('Y-m-d').' 10:00:00';
+			$edate = date('Y-m-d',strtotime("tomorrow")).' 09:59:59';
 			//If store
 if($warehouse=='31'){
 		$q =$this->db->query("SELECT * from (SELECT code,name,SUM(saleqty) as saleqty,SUM(purchaseqty) AS purchaseqty,SUM(stockoutqty) AS stockoutqty,SUM(adjstqty) AS adjstqty,SUM(saleopqty) as saleopqty,SUM(purchaseopqty) as purchaseopqty,SUM(stockoutopqty) AS stockoutopqty,SUM(adjstopqty) as adjstopqty,id,unit FROM (
@@ -669,6 +669,19 @@ public function getAllCategories() {
         return 0;
     }
 
+     public function getBalanceQty($product_id, $warehouse_id) {
+        $this->db->select('SUM(COALESCE(quantity, 0)) as stock', False);
+        $this->db->where('product_id', $product_id);
+        if ($warehouse_id) {
+            $this->db->where('warehouse_id', $warehouse_id);
+        }
+        $q = $this->db->get('warehouses_products');
+        if ($q->num_rows() > 0) {
+            $data = $q->row();
+            return $data->stock;
+        }
+        return 0;
+    }    
     private function getBalanceVariantQuantity($variant_id, $warehouse_id = NULL) {
         $this->db->select('SUM(COALESCE(quantity_balance, 0)) as stock', False);
         $this->db->where('option_id', $variant_id)->where('quantity_balance !=', 0);

@@ -217,41 +217,30 @@
                                 <div class="input-group">
                                     
 
-                           <button class="btn-prni btn-info minimize" data-toggle="modal" data-target="#tablesdiv" id="tableselect"><b>SELECT TABLE </b> </button>
+                           <button class="btn-prni btn-info minimize" data-toggle="modal" data-target="#tablesdiv" id="tableselect"><b>SELECT ORDER </b> </button>
 						   <button class="btn-prni btn-secondary minimize" data-toggle="modal" data-target="#srptdiv" id="srptselect"><b>SALES REPORT </b> </button>
 						   <button class="btn-prni btn-secondary minimize" data-toggle="modal" data-target="#smrytdiv" id="smrytselect"><b>SUMMARY REPORT </b> </button>
 						   <button class="btn-prni btn-info minimize" data-toggle="modal" data-target="#printbilldiv" id="tableprintbill" ><b>PRINT BILL </b> </button>
                            <button class="btn-prni btn-primary minimize" data-toggle="modal" data-target="#roomsdiv" id="roomselect" style="display:none"> ROOM</button>
                                 <?php
                                     echo form_input('count_cust', (isset($_POST['count_cust']) ? $_POST['count_cust'] : ""), 'id="countcustomers" placeholder="Table No" required="required" class="form-control pos-input-tip" style="width:100%; display:none"');
-                                    echo form_input('table_no', (isset($_POST['table_no']) ? $_POST['table_no'] : ""), 'id="table_no" placeholder="Table No" readonly required="required" class="form-control pos-input-tip" style="width:100%;"');
+                                    echo form_input('table_no', (isset($_POST['table_no']) ? $_POST['table_no'] : ""), 'id="table_no" placeholder="Order No" readonly required="required" class="form-control pos-input-tip" style="width:100%;"');
 
                                     ?>
                                 </div>
                       
                             </div>
                             <div class="no-print">
-                                <?php if ($Owner || $Admin) { ?>
                                     <div class="form-group">
                                         <?php
-                                        $wh[''] = '';
+                                       $wh[''] = '';
                                         foreach ($warehouses as $warehouse) {
                                             $wh[$warehouse->id] = $warehouse->name;
                                         }
-                                        echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="poswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line("select") . ' ' . $this->lang->line("warehouse") . '" required="required" style="width:100%;" ');
+                                        echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : ''), 'id="poswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line("select") . ' ' . $this->lang->line("warehouse") . '" required="required" style="width:100%;" ');
                                         ?>
                                     </div>
-                                <?php } else {
-
-                                   $warehouse_input = array(
-                                        'type' => 'hidden',
-                                        'name' => 'warehouse',
-                                        'id' => 'poswarehouse',
-                                        'value' => $this->session->userdata('warehouse_id'),
-                                    );
-
-                                   echo form_input($warehouse_input);
-                               } ?>
+            
                                 <div class="form-group" id="ui">
                                     <div class="input-group">
                                         <?php echo form_input('add_item', '', 'class="form-control pos-tip" id="add_item" data-placement="top" data-trigger="focus" placeholder="' . $this->lang->line("search_product_by_name_code") . '" title="' . $this->lang->line("au_pr_name_tip") . '"'); ?>
@@ -303,7 +292,7 @@
                                     </tr>
                                     <tr>
                                         <td style="padding: 5px 10px;"><?= lang('order_tax'); ?>
-                                            <a href="#" id="pptax2">
+                                            <a href="#" id="pptax2" style="display:none">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                         </td>
@@ -311,7 +300,7 @@
                                             <span id="ttax2">0.00</span>
                                         </td>
                                         <td style="padding: 5px 10px;"><?= lang('discount'); ?>
-                                            <a href="#" id="ppdiscount">
+                                            <a href="#" id="ppdiscount" style="display:none">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                         </td>
@@ -850,7 +839,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">TABLES</h5>
+        <h5 class="modal-title" id="exampleModalLabel">Orders</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -984,8 +973,20 @@
                 </div>
 				 </div>
 				</div>
+				<div class="row">
+				<div class="col-lg-6"> 
+				 <div class="form-group">
+				   <?php
+                                        $wh[''] = '';
+                                        foreach ($warehouses as $warehouse) {
+                                            $wh[$warehouse->id] = $warehouse->name;
+                                        }
+                                        echo form_dropdown('saleswarehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="saleswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line("select") . ' ' . $this->lang->line("warehouse") . '" required="required" style="width:100%;" ');
+                                        ?>
 				
-
+					</div>
+				 </div>
+				</div>
 </div>
 <div class="box-footer">
                 
@@ -1558,7 +1559,7 @@ var lang = {unexpected_value: '<?=lang('unexpected_value');?>', select_above: '<
            				$( ".tablebtn2" ).click(function() {
      var $tableid = $(this).val()
 		//$to = $( "#smry_to_date" ).val();
-        window.open("../../mpos/pos/printcombinebill/?tableid="+$tableid);
+        window.open("../../latesara/pos/printcombinebill/?tableid="+$tableid);
 
     });  
        $('#payment').click(function () {
@@ -1596,13 +1597,14 @@ var lang = {unexpected_value: '<?=lang('unexpected_value');?>', select_above: '<
 			$( "#actual_rentalIcme" ).click(function() {
     $startdate = $( "#actual_from_date" ).val();
 		$to = $( "#actual_to_date" ).val();
-        window.open("../../mpos/pos/viewsalepos/?startdate="+$startdate+"&todate="+$to);
+		$warehouseid = $( "#saleswarehouse" ).val();
+        window.open("../../latesara/pos/viewsalepos/?startdate="+$startdate+"&todate="+$to+"&warehouseid="+$warehouseid);
 
     });
 				$( "#actual_smry" ).click(function() {
     $startdate = $( "#smry_from_date" ).val();
 		$to = $( "#smry_to_date" ).val();
-        window.open("../../mpos/pos/viewsalesumm/?startdate="+$startdate+"&todate="+$to);
+        window.open("../../latesara/pos/viewsalesumm/?startdate="+$startdate+"&todate="+$to);
 
     });
 	

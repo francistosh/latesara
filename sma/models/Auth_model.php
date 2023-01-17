@@ -115,6 +115,17 @@ class Auth_model extends CI_Model
             return $salt . substr(sha1($salt . $password), 0, -$this->salt_length);
         }
     }
+    
+    public function get_user_data($email)
+    {
+$this->db->select('sma_users.id, sma_users.username, sma_users.email, sma_users.avatar, sma_users.created_on, sma_users.active, sma_users.first_name, sma_users.last_name, sma_users.company, sma_users.phone, sma_users.group_id, sma_users.company_id');
+        $y = $this->db->get_where('sma_users',array('sma_users.email'=>$email));
+        if ($y->num_rows() > 0) {
+            return $y->row();
+        }else {
+            return null;
+        }
+    }
 
     public function hash_password_db($id, $password, $use_sha1_override = FALSE)
     {

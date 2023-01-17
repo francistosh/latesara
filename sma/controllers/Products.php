@@ -1972,6 +1972,61 @@ class Products extends MY_Controller
 
     }
 
+      function add_stockadjustment($product_id = NULL, $warehouse_id = NULL)
+    {
+        $this->sma->checkPermissions(false, true);
+       // $this->form_validation->set_rules('type', lang("type"), 'required');
+       // $this->form_validation->set_rules('quantity', lang("quantity"), 'required');
+       // $this->form_validation->set_rules('warehouse', lang("warehouse"), 'required');
+       // print_r($this->input->post());
+        // die();
+        $count = $this->input->post('count');
+		$warehouseid = $this->input->post('warehouseid');
+		//$warehouseid = 37;
+        //echo $this->input->post($name);
+           // if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld($this->input->post('stdate'));
+           // } else {
+                //$date = date('Y-m-d H:s:i');
+           // }
+        //loop through the post date
+        for($i=1;$i<=$count;$i++){
+            $codename = 'code'.$i;
+            $diffadjust = 'adjstdiff'.$i;
+           $productcode = $this->input->post($codename);
+             $adjustqty = $this->input->post($diffadjust);
+
+           if($adjustqty < 0){
+            $type = 'addition';
+            $quantity = $adjustqty*-1;
+           }else if ($adjustqty >0){
+            $type = 'subtraction';
+            $quantity = $adjustqty;
+           }else {
+           $type = 'addition';
+           $quantity = 0;
+           }
+            $prdctdet = $this->products_model->getProductByCode($productcode);
+           $data = array(
+                'date' => $date,
+                'product_id' => $prdctdet->id,
+                'type' => $type,
+                'quantity' =>$quantity,
+                'warehouse_id' => $warehouseid,
+                'option_id' => '',
+                'note' => $this->sma->clear_tags('Physical Stock take'),
+                'created_by' => $this->session->userdata('user_id')
+                );
+
+           $this->products_model->add_adjustments($data);
+        }
+     //die();
+           $this->session->set_flashdata('message', lang("payments_confirmed"));
+                    redirect($_SERVER["HTTP_REFERER"]);   
+
+        
+    }
+
     function add_adjustment($product_id = NULL, $warehouse_id = NULL)
     {
         $this->sma->checkPermissions(false, true);
@@ -2030,8 +2085,8 @@ class Products extends MY_Controller
             redirect('products');
         }
 
-        if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data)) {
-            $this->session->set_flashdata('message', lang("quantity_adjusted"));
+        if ($this->form_validation->run() == true && $this->products_model->add_adjustments($data)) {
+                    $this->session->set_flashdata('message', lang("quantity_adjusted"));
             redirect('products/quantity_adjustments');
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));

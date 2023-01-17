@@ -160,24 +160,10 @@
                                 </thead>
                                 <tbody>
                                     <?php foreach ($warehouses as $warehouse) {
-                                         if ($warehouse->id == 31) { //store
-															$openingstck = $records->purchaseopqty - $records->saleopqty + $records->adjstopqty - $records->stockoutopqty  ;
-							$stockout = $records->stockoutqty;
-							$stockoutop = $records->stockoutopqty;
-							$totals = $openingstck+$records->purchaseqty;
-							$closingstck = $totals - $records->saleqty+$records->adjstqty-$stockout;
-                                                            echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatNumber($closingstck) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td></tr>';
-                                                        }
-														if ($warehouse->id == 32) { //bar
-															$openingstck = $bar->purchaseopqty - $bar->saleopqty + $bar->adjstopqty - $bar->stockoutopqty  ;
-							$stockout = $records->stockoutqty;
-							
-							$totals = $openingstck+$bar->purchaseqty;
-							$closingstckbar = $totals - $bar->saleqty+$bar->store-$stockout;
-                                                            echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatNumber($closingstckbar) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td></tr>';
-                                                        }
+                                         echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatNumber($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td></tr>';
+                                               
                                     } ?>
-									 <tr style=" border-top: 2px solid #000;"><td>Total QTY</td><td><strong> <?= $closingstckbar+$closingstck; ?></strong></td></tr>
+									 <tr style=" border-top: 2px solid #000;"><td>Total QTY</td><td><strong> <?= $warehouse->quantity; ?></strong></td></tr>
 									 </tbody>
                             </table>
                         </div>

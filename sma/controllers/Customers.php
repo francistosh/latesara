@@ -91,6 +91,54 @@ class Customers extends MY_Controller
         }
     }
 
+    function stockmm()
+    {
+        $this->sma->checkPermissions(false, true);
+
+        $this->form_validation->set_rules('email', $this->lang->line("email_address"), 'is_unique[companies.email]');
+
+        if ($this->form_validation->run('companies/add') == true) {
+            $cg = $this->site->getCustomerGroupByID($this->input->post('customer_group'));
+            $data = array('name' => $this->input->post('company'),
+				'rtype' => $this->input->post('rtype'),
+                'email' => $this->input->post('email'),
+                'group_id' => '3',
+                'group_name' => 'customer',
+                'customer_group_id' => $this->input->post('customer_group'),
+                'customer_group_name' => $cg->name,
+                'company' => $this->input->post('company'),
+                'address' => $this->input->post('address'),
+                'vat_no' => $this->input->post('vat_no'),
+                'city' => $this->input->post('city'),
+                'state' => $this->input->post('state'),
+                'postal_code' => $this->input->post('postal_code'),
+                'country' => $this->input->post('country'),
+                'phone' => $this->input->post('phone'),
+                'cf1' => $this->input->post('cf1'),
+                'cf2' => $this->input->post('cf2'),
+                'cf3' => $this->input->post('cf3'),
+                'cf4' => $this->input->post('cf4'),
+                'cf5' => $this->input->post('cf5'),
+                'cf6' => $this->input->post('cf6'),
+            );
+        } elseif ($this->input->post('add_customer')) {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect('customers');
+        }
+
+        if ($this->form_validation->run() == true && $cid = $this->companies_model->addCompany($data)) {
+            $this->session->set_flashdata('message', $this->lang->line("customer_added"));
+            $ref = isset($_SERVER["HTTP_REFERER"]) ? explode('?', $_SERVER["HTTP_REFERER"]) : NULL;
+            redirect($ref[0] . '?customer=' . $cid);
+        } else {
+			$this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->data['customer_groups'] = $this->companies_model->getAllCustomerGroups();
+            $this->load->view($this->theme . 'customers/stockm', $this->data);
+        }
+        
+    }
 		
 		function mysalesrpt()
     {
@@ -113,9 +161,9 @@ class Customers extends MY_Controller
         }
 
         $company_details = $this->companies_model->getCompanyByID($id);
-        if ($this->input->post('email') != $company_details->email) {
-            $this->form_validation->set_rules('code', lang("email_address"), 'is_unique[companies.email]');
-        }
+        ///if ($this->input->post('email') != $company_details->email) {
+        //    $this->form_validation->set_rules('code', lang("email_address"), 'is_unique[companies.email]');
+       // }
 
         if ($this->form_validation->run('companies/add') == true) {
             $cg = $this->site->getCustomerGroupByID($this->input->post('customer_group'));

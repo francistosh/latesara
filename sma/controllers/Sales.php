@@ -18,6 +18,7 @@ class Sales extends MY_Controller
         $this->lang->load('sales', $this->Settings->language);
         $this->load->library('form_validation');
         $this->load->model('sales_model');
+		$this->load->model('pos_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
         $this->thumbs_path = 'assets/uploads/thumbs/';
@@ -206,7 +207,103 @@ class Sales extends MY_Controller
         $meta = array('page_title' => lang('return_sales'), 'bc' => $bc);
         $this->page_construct('sales/return_sales', $meta, $this->data);
     }
+function guests($action = NULL)
+    {
+       $this->sma->checkPermissions('index');
 
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['action'] = $action;
+        $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => '#', 'page' => lang('rooms')));
+        $meta = array('page_title' => lang('rooms'), 'bc' => $bc);
+        $this->page_construct('sales/guests', $meta, $this->data);
+    }
+    function getGuests()
+    {
+       $this->sma->checkPermissions('index');
+        $this->load->library('datatables');
+
+		 $this->datatables
+            ->select("id, name, customer_group_name ")
+            ->from("companies")
+            ->where('group_name', 'customer')
+			->where('customer_group_name', 'Business/Corporate')
+            ->add_column("Actions", "<center>
+                <a class=\"tip\" title='" . $this->lang->line("pdf") . "' href='" . site_url('rooms/pdf_bill/$1') . "'><i class=\"fa fa-file-pdf-o\"></i></a> 
+                <a class=\"tip\" title='" . $this->lang->line("Guest_Bill") . "' href='" . site_url('sales/allbills/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-money\"></i></a> 
+                <a class=\"tip\" title='" . $this->lang->line("edit_room") . "' href='" . site_url('rooms/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-pencil\"></i></a>", "id");
+        //->unset_column('id');
+        echo $this->datatables->generate();
+		
+    }
+	
+	function allbills($id = NULL)
+    {
+        $this->sma->checkPermissions('index');
+
+        $arr = $this->input->post('amountg');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+      
+        $sale_items = $this->sales_model->getAllBarReceptionSalesByCustID($id);
+		
+        $sales = $this->sales_model->getAllSalesByCustId($id);
+        $user = $this->sales_model->getUserByID($this->session->userdata('user_id'));
+		  $result=$this->db->query("select name,id from sma_companies where id = '$id' ")->result();
+
+        $this->form_validation->set_rules('warehouse', 'Hotel', 'required');
+
+        if ($this->form_validation->run() == true) {
+
+foreach ($arr as $key => $value) {
+	if($value !=0){
+	  $payment = array(
+                    'date' => date('Y-m-d H:i:s'),
+                    'sale_id' => $key,
+                    'reference_no' => $this->site->getReference('pay'),
+                    'amount' => $value,
+                    'bill_change' => 0.00,
+                    'paid_by' => $this->input->post('paidg_by'),
+					'customer_id '=> $id,
+                    'chef_id' => $this->session->userdata('user_id'),
+                    'chef' => $user->first_name .' '.$user->last_name,
+
+                    'cashier_id' => $this->session->userdata('user_id'),
+                    'cashier' => $user->first_name .' '.$user->last_name,
+
+                    'mpesa_transaction_no' => NULL,
+                    'cost_center_no' => $result->name,
+                    'cheque_no' => NULL,
+                    'cc_no' => NULL,
+                    'cc_holder' => NULL,
+                    'cc_month' => NULL,
+                    'cc_year' => NULL,
+                    'cc_type' => NULL,
+                    'cc_cvv2' => NULL,
+                    'note' => NULL,
+                    'created_by' => $this->session->userdata('user_id'),
+                    'type' => 'received'
+                );
+			
+				$this->pos_model->addReceptionPayment($payment);
+}
+}
+            $this->session->set_flashdata('message', $this->lang->line("bills_paid"));
+            $ref = isset($_SERVER["HTTP_REFERER"]) ? explode('?', $_SERVER["HTTP_REFERER"]) : NULL;
+            redirect('sales/guests');
+        } else {
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['room'] = $room;
+			$this->data['customer'] = $result;
+            $this->data['sale_items'] = $sale_items;
+            $this->load->view($this->theme . 'sales/guestbill', $this->data);
+        }
+		
+    }
+	
     function getReturns($warehouse_id = NULL)
     {
         $this->sma->checkPermissions('return_sales');
@@ -226,14 +323,14 @@ class Sales extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".reference_no as ref, " . $this->db->dbprefix('sales') . ".reference_no as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id")
+                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".sale_id as ref, " . $this->db->dbprefix('sales') . ".id as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id")
                 ->join('sales', 'sales.id=return_sales.sale_id', 'left')
                 ->from('return_sales')
                 ->group_by('return_sales.id')
                 ->where('return_sales.warehouse_id', $warehouse_id);
         } else {
             $this->datatables
-                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".reference_no as ref, " . $this->db->dbprefix('return_sales') . ".note as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id")
+                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".reference_no as ref, " . $this->db->dbprefix('return_sales') . ".sale_id as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id")
                 ->join('sales', 'sales.id=return_sales.sale_id', 'left')
                 ->from('return_sales')
                 ->group_by('return_sales.id');
@@ -375,8 +472,8 @@ class Sales extends MY_Controller
          $date1 = DateTime::createFromFormat('d/m/Y',$fromdate);
          $date2 = DateTime::createFromFormat('d/m/Y',$todate);
 	if(!empty($fromdate)){
-		   $fromdate= $date1->format("Y-m-d")." 06:00:00";
-		  $todate= $date2->format("Y-m-d")." 05:59:59";
+		   $fromdate= $date1->format("Y-m-d")." 10:00:00";
+		  $todate= $date2->format("Y-m-d")." 09:59:59";
 	
 	if ($paid_by) {
                 $filterpay = "sma_sales.pmethod = '$paid_by'";
@@ -485,13 +582,13 @@ $mpdf->Output('receipt.pdf','I');
        if ($this->input->get('cost_fromdate')) {
             $sdate = $this->input->get('cost_fromdate');
 			$date1 = DateTime::createFromFormat('d/m/Y',$sdate);
-			$sdate = $date1->format("Y-m-d")." 06:00:00";
+			$sdate = $date1->format("Y-m-d")." 10:00:00";
 			$roomingdate = $date1->format("Y-m-d");
         } 
 		if ($this->input->get('cost_todate')) {
             $tdate = $this->input->get('cost_todate');
 			 $date2 = DateTime::createFromFormat('d/m/Y',$tdate);
-			  $tdate= $date2->format("Y-m-d")." 05:59:59";
+			  $tdate= $date2->format("Y-m-d")." 09:59:59";
 			  
         }
 			$costdepartmentt = $this->input->get('costdepartmentt');
@@ -527,13 +624,13 @@ $this->data['todate'] = $tdate;
        if ($this->input->get('fcost_fromdate')) {
             $sdate = $this->input->get('fcost_fromdate');
 			$date1 = DateTime::createFromFormat('d/m/Y',$sdate);
-			$sdate = $date1->format("Y-m-d")." 06:00:00";
+			$sdate = $date1->format("Y-m-d")." 10:00:00";
 			$roomingdate = $date1->format("Y-m-d");
         } 
 		if ($this->input->get('fcost_todate')) {
             $tdate = $this->input->get('fcost_todate');
 			 $date2 = DateTime::createFromFormat('d/m/Y',$tdate);
-			  $tdate= $date2->format("Y-m-d")." 05:59:59";
+			  $tdate= $date2->format("Y-m-d")." 09:59:59";
 			  
         }
 			$costdepartmentt = $this->input->get('fcostdepartmentt');
@@ -1687,10 +1784,10 @@ $this->data['todate'] = $tdate;
 
     function sale_actions()
     {
-        if (!$this->Owner) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            redirect($_SERVER["HTTP_REFERER"]);
-        }
+       // if (!$this->Owner || !$this->Admin) {
+       //     $this->session->set_flashdata('warning', lang('access_denied'));
+       //     redirect($_SERVER["HTTP_REFERER"]);
+       // }
 
         $this->form_validation->set_rules('form_action', lang("form_action"), 'required');
 //die(print_r($_POST));

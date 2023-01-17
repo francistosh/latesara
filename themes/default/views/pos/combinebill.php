@@ -78,14 +78,20 @@ if ($modal) {
         <div class="text-center">
           <!--    <img src="<?//= base_url() . 'assets/uploads/logos/' . $biller->logo; ?>" alt="<?//= $biller->company; ?>">
 <!--            <h3 style="text-transform:uppercase;"><b>$inv->id$biller->company != '-' ? $biller->company : $biller->name; ?></b></h3>-->
-            <h5 style="text-transform:uppercase;"><b><?= "COCONUT BREEZE HOTEL"?></b></h5>
-				<h6 >P.O BOX 2606, 80100 MOMBASA</h6>
-				<h6 >Tel No: 0728 975 593 <h6 >
-				<h6 >P.I.N : P051421403M<h6 >
+            <h5 style="text-transform:uppercase;font-size:18px"><b><?= "La TESSARA "?></b></h5>
+				<h6 >NAIROBI</h6>
+				<h6 >0715 445 758<h6 >
+				
 
- <h6 style="text-transform:uppercase;"><b> BILL NO: </b> <?php
+ <h6 style="text-transform:uppercase;font-size:16px"><b> BILL NO: </b> <?php
+ $t=1;
  foreach($billnos as $row1){
-	 echo $row1->id.',';
+	 $t++;
+	 if($t % 5 == 0)
+    {
+        echo "<br>";
+    }
+	 echo '<b>'.$row1->id.' ,</b>';
  }
  ?></h6>
             <?php
@@ -111,7 +117,7 @@ if ($modal) {
            // echo lang("customer") . ": " . $inv->customer . "   -    "."No of Customer(s) : ". $inv->count_cust.  "<br>";
            // echo "Cashier" . ": " . $inv->cashier . "</br>";
            // echo "Chef" . ": " . $inv->chef . "</br>";
-            echo lang("date") . ": " . $this->sma->hrld($start) . "</p>";
+            echo "<span style='font-size:16px'>".lang("date") . ": " . $this->sma->hrld(date('Y-m-d H:i:s')) . "</p></span>";
            
             ?>
             <div style="clear:both;"></div>
@@ -159,10 +165,10 @@ if ($modal) {
                 <?php
                 //if ($inv->product_tax != 0) {
 	
-                  echo '<tr><th colspan="4" style="text-align:right;font-size:11px">' . lang("Sub Total") . '</th><th class="text-right" style="font-size:11px">' . $this->sma->formatMoney($totalamnt- $inv->product_tax - (0.02 * $totalamnt +($totalamnt*0.16)) ) . '</th></tr>';
+                  echo '<tr><th colspan="4" style="text-align:right;font-size:11px">' . lang("Sub Total") . '</th><th class="text-right" style="font-size:11px">' . $this->sma->formatMoney($totalamnt- $inv->product_tax - ($totalamnt*0.16) ) . '</th></tr>';
                     echo '<tr ><td colspan="4" style="text-align:right; font-size:11px" >' . lang("VAT 16%") . '</td><td class="text-right" style="font-size:11px">' . $this->sma->formatMoney($totalamnt*0.16) . '</td></tr>';
 					// echo '<tr ><td colspan="4"><i>All prices are VAT inclusive</i></td></tr>';
-                    echo '<tr><td colspan="4" style="text-align:right;font-size:11px">' . lang("Catering Levy 2%") . '</td><td class="text-right" style="font-size:11px">' . $this->sma->formatMoney(0.02 * $totalamnt) . '</td></tr>';
+                    //echo '<tr><td colspan="4" style="text-align:right;font-size:11px">' . lang("Catering Levy 2%") . '</td><td class="text-right" style="font-size:11px">' . $this->sma->formatMoney(0.02 * $totalamnt) . '</td></tr>';
                
 
 				//}
@@ -190,7 +196,7 @@ if ($modal) {
                     </tr>
 
                 <?php //}
-  echo '<p>You were served by : '.$soldby->first_name.'&nbsp;</p>';
+  echo '<p style="font-size:14px">You were served by : <b>'.$soldby->first_name.'</b>&nbsp;</p>';
    echo 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<br>';
 			
                  ?>
@@ -198,8 +204,8 @@ if ($modal) {
                         <th><?= "<b>Total Paid</b>"; ?></th>
                         <th class="text-right"><?= $this->sma->formatMoney($inv->bill_change+$inv->paid); ?></th>
                   </tr>-->
-                 <tr style="font-size:15px"><td colspan="2"><br>Send Money: 0717 616 500</td><td align="center" colspan="2"><br>-- Adetha Muchai</td><td></td></tr>
-				 <tr style="font-size:15px"><td colspan="2"><br>Room No: _______________</td><td align="center" colspan="2"><br>Sign: _______________</td><td></td></tr>
+                 <!-- <tr style="font-size:15px"><td colspan="2"><br>Send Money: 0717 616 500</td><td align="center" colspan="2"><br>-- Adetha Muchai</td><td></td></tr>-->
+				 <tr style="font-size:15px"><td colspan="2"><br>Mpesa Till No:  9754369</td><td align="center" colspan="2"><br></td><td></td></tr>
                 </tfoot>
             </table>
 			
@@ -207,7 +213,7 @@ if ($modal) {
                 <?php //echo "MPESA TILL : 686569"; ?>
                 
                 <?php echo "<< THANK YOU >>";
-echo '<p><br>Developed by Techsavanna Ltd :<br>infoattechsavanna.technology  </p>';				?>
+echo '<p><br>Developed by Techsavanna Ltd :<br>info@techsavanna.technology  </p>';				?>
 				
             </div>
             <?php
@@ -294,7 +300,7 @@ echo '<p><br>Developed by Techsavanna Ltd :<br>infoattechsavanna.technology  </p
     <span class="pull-left col-xs-12"><a class="btn btn-block btn-success" href="#" id="email"><?= lang("email"); ?></a></span>
 
     <span class="col-xs-12">
-        <a class="btn btn-block btn-warning" href="<?= site_url('pos'); ?>"><?= lang("back_to_pos"); ?></a>
+        <a class="btn btn-block btn-warning" onclick="window.close()"><?= lang("back_to_pos"); ?></a>
     </span>
     <?php if (!$pos_settings->java_applet) { ?>
         <div style="clear:both;"></div>

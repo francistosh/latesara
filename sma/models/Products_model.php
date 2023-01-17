@@ -62,6 +62,33 @@ class Products_model extends CI_Model
          return FALSE;
          
     }
+    
+    public function getAppProducts()
+    {
+
+        $this->db->select('products.id, products.code, products.name, products.price, warehouses_products.quantity')
+        ->from('products')
+        ->join('warehouses_products', 'warehouses_products.product_id = products.id', 'left')
+        ->group_by('products.id');
+        
+        $result = $this->db->get();
+        
+        if ($result->num_rows() > 0) {
+            foreach (($result->result()) as $row) {
+                 $response[] = array(
+                        "product_id"=>$row->id,
+                        "product_code"=>$row->code,
+                        "product_name"=>$row->name,
+                        "price"=>intval($row->price),
+                        "quantity"=>intval($row->quantity),
+                        );
+            }
+            return $response;
+        }else{
+            return array();
+        }
+    }
+    
     public function getAllProducts()
     {
         $q = $this->db->get('products');
@@ -711,7 +738,32 @@ class Products_model extends CI_Model
         }
         return FALSE;
     }
+    public function add_adjustments($data){
+         
+        if ($this->db->insert('adjustments', $data)) {
+           $wh_balance_qty = $this->site->getBalanceQty($data['product_id'], $data['warehouse_id']);
 
+            if($data['type'] == 'subtraction') {
+                
+               $nq = $wh_balance_qty - $data['quantity'];
+             
+            }
+            else{
+                $nq = $wh_balance_qty + $data['quantity'];
+               
+            }
+
+             //echo $newhqty;
+           // die();
+           // $RESLT = $this->db->query("UPDATE sma_warehouses_products SET quantity =".$newhqty." where 
+            //   product_id = ".$data['product_id']." AND warehouse_id = ".$data['warehouse_id']." ");
+
+            $this->db->update('sma_warehouses_products', array('quantity'=> $nq), array('product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id']));
+                      return true;
+        }
+         return false;
+    
+    }
     public function syncAdjustment($data = array())
     {
         if(! empty($data)) {

@@ -167,8 +167,10 @@ if ($modal) {
         <div class="text-center">
           <!--    <img src="<?//= base_url() . 'assets/uploads/logos/' . $biller->logo; ?>" alt="<?//= $biller->company; ?>">
 <!--            <h3 style="text-transform:uppercase;"><b>$inv->id$biller->company != '-' ? $biller->company : $biller->name; ?></b></h3>-->
-             <h5 style="text-transform:uppercase;"><b><?= $biller->company != '-' ? $biller->company : $biller->name; ?></b></h5>
- <h6 style="text-transform:uppercase;"><b> BILL NO: </b><?= $inv->id; ?></h6>
+              <h5 style="text-transform:uppercase;font-size:16px"><b><?= $biller->company != '-' ? $biller->company : $biller->name; ?></b></h5>
+                <h6 >NAIROBI</h6>
+                <h6 >0715 445 758<h6 >
+ 
             <?php
            //echo "<br>" . lang("tel") . ": " . $biller->phone . "<br>";
             ?>
@@ -192,7 +194,11 @@ if ($modal) {
            // echo lang("customer") . ": " . $inv->customer . "   -    "."No of Customer(s) : ". $inv->count_cust.  "<br>";
            // echo "Cashier" . ": " . $inv->cashier . "</br>";
            // echo "Chef" . ": " . $inv->chef . "</br>";
-            echo lang("date") . ": " . $this->sma->hrld($inv->date) . "</p>";
+              echo "<span style='font-size:14px'>".lang("date") . ": <b>" . $this->sma->hrld($inv->date)."</b>";
+           echo  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+           Bill No: <b>". $inv->id."</b></p></span>";
+            ?>
            
             ?>
             <div style="clear:both;"></div>
@@ -238,7 +244,8 @@ if ($modal) {
                 //if ($inv->product_tax != 0) {
 	
                    // echo '<tr><th>' . lang("Sub Total") . '</th><th class="text-right">' . $this->sma->formatMoney($inv->grand_total- $inv->product_tax - (0.02 * $inv->grand_total) ) . '</th></tr>';
-                    echo '<tr><td colspan="4">' . lang("VAT 18%") . '</td><td class="text-right">' . $this->sma->formatMoney($inv->grand_total*0.18) . '</td></tr>';
+                     echo '<tr><th colspan="4" style="text-align:right;font-size:11px">' . lang("Sub Total") . '</th><th class="text-right" style="font-size:11px">' . $this->sma->formatMoney($inv->grand_total- $inv->product_tax - ($inv->grand_total*0.16) ) . '</th></tr>';
+                    echo '<tr><td colspan="4">' . lang("VAT 16%") . '</td><td class="text-right">' . $this->sma->formatMoney($inv->grand_total*0.16) . '</td></tr>';
                 
 
 				//}
@@ -266,7 +273,7 @@ if ($modal) {
                     </tr>
 
                 <?php }
-  echo '<p>You were served by:'.$soldby->first_name.'&nbsp;</p>';
+  echo '<p style="font-size:14px">Served by : <b>'.$soldby->first_name.'&nbsp;</b></p>';
    echo 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<br>';
 			
                  ?>
@@ -274,18 +281,17 @@ if ($modal) {
                         <th><?= "<b>Total Paid</b>"; ?></th>
                         <th class="text-right"><?= $this->sma->formatMoney($inv->bill_change+$inv->paid); ?></th>
                   </tr>-->
-                 <tr style="font-size:15px"><td colspan="2"><br>Room No: _______________</td><td align="center" colspan="2"><br>Sign: _______________</td></tr>
+                  <tr style="font-size:15px"><td colspan="2"><br>Mpesa Till No:  9754369 </td><td align="center" colspan="2"><br></td><td></td></tr>
 
                 </tfoot>
             </table>
 			<div class="well well-sm" style="text-align: center">
-                <?php echo "Mobile Money:"; ?>
+  
                 <br></br>
-                <?php echo "<< THANK YOU >>"; ?>
-				<?php
-			echo '<tr ><td style="font-size:2px"><center><b>&regTechsavanna Co. Ltd</b></center></td></tr>';	
-			echo '<tr><td><center>Mail:<i style="color:#0000FF;">sales@techsavanna.technology</i></center></td></tr>';
-			echo '<tr><td><center>Phone:<i style="color:#0000FF;">0700 106 077</i></center></td></tr>';
+               
+			
+			<?php echo "<< Welcome & Enjoy Your Stay >>";
+echo '<p><br>Developed by Techsavanna Ltd:<br> info@techsavanna.technology  </p>';          
 			?>
             </div>
             <?php
@@ -379,10 +385,10 @@ if ($modal) {
         <span class="pull-right col-xs-12">
         <a href="pos/sales" id="web_print" class="btn btn-block btn-success" ><?= lang("Combine Bill"); ?></a>
     </span>
-        <span class="pull-right col-xs-12">
+       <!-- <span class="pull-right col-xs-12">
         <a href="javascript:window.print()" id="web_print" class="btn btn-block btn-primary"
            onClick="window.print();return false;"><?= lang("web_print"); ?></a>
-    </span>
+    </span> -->
     <?php } ?>
     <span class="pull-left col-xs-12" style="display:none"><a class="btn btn-block btn-success" href="#" id="email"><?= lang("email"); ?></a></span>
     <span class="col-xs-12">

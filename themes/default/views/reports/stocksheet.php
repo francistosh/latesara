@@ -34,6 +34,9 @@ if ($this->input->post('cf6')) {
 ?>
 <script>
     $(document).ready(function () {
+		$('#PrRData').on('click','tbody td:not(:first-child)',function(e){
+			editor.inline(this);
+		});
         var oTable = $('#PrRData').dataTable({
             "aaSorting": [[3, "desc"], [2, "desc"]],
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
@@ -70,6 +73,7 @@ if ($this->input->post('cf6')) {
             {column_number: 0, filter_default_label: "[<?=lang('product_code');?>]", filter_type: "text", data: []},
             {column_number: 1, filter_default_label: "[<?=lang('product_name');?>]", filter_type: "text", data: []},
         ], "footer");
+		
     });
 </script>
 <script type="text/javascript">
@@ -221,7 +225,7 @@ if ($this->input->post('cf6')) {
 				
                 <div class="table-responsive">
 				<div style="text-align:center">
-				<b>ROCY HOTEL</b>
+				<b>SIPIT LOUNGE</b>
 				<h2 class="blue"><i class="fa-fw fa fa-barcode"></i><?= lang('Stock_Sheet_Report'); ?> <?php
                        ?></h2> </div>
                     <table id="PrRData"

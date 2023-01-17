@@ -43,21 +43,21 @@
                 </div> -->
                     <div class="form-group">
                         <?= lang("email_address", "email_address"); ?>
-                        <input type="email" name="email" class="form-control" required="required" id="email_address"
+                        <input type="email" name="email" class="form-control" id="email_address"
                                value="<?= $customer->email ?>"/>
                     </div>
                     <div class="form-group">
                         <?= lang("phone", "phone"); ?>
-                        <input type="tel" name="phone" class="form-control" required="required" id="phone"
+                        <input type="tel" name="phone" class="form-control"  id="phone"
                                value="<?= $customer->phone ?>"/>
                     </div>
                     <div class="form-group">
                         <?= lang("address", "address"); ?>
-                        <?php echo form_input('address', $customer->address, 'class="form-control" id="address" required="required"'); ?>
+                        <?php echo form_input('address', $customer->address, 'class="form-control" id="address" '); ?>
                     </div>
                     <div class="form-group">
                         <?= lang("city", "city"); ?>
-                        <?php echo form_input('city', $customer->city, 'class="form-control" id="city" required="required"'); ?>
+                        <?php echo form_input('city', $customer->city, 'class="form-control" id="city" '); ?>
                     </div>
                     <div class="form-group">
                         <?= lang("state", "state"); ?>
