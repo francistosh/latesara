@@ -922,6 +922,23 @@ $array=array();
         }
         return FALSE;
     }
+	public function getPrevPaymnt($sdate,$tdate)
+    {
+        $this->db->select('SUM(sma_reception_payments.amount) amnt')
+            ->join('sales', 'reception_payments.sale_id = sales.id')
+			->where("sma_reception_payments.date >= '$sdate' and sma_reception_payments.date <= '$tdate'");
+			
+            //->group_by('paid_by');
+           // ->order_by('products.category_id', 'asc');
+        $q = $this->db->get_where('reception_payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return FALSE;
+    }
 	public function getUpaidsales_departmentwise($sdate,$tdate,$department)
     {
 		//CHECK DETAILS ON CATEGORIES TABLE

@@ -1021,6 +1021,7 @@ class Pos extends MY_Controller
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
         $this->data['rows'] = $this->pos_model->getPaymntTypesales($sdate,$tdate);
+		$this->data['prevpdsales'] = $this->pos_model->getPrevPaymnt($sdate,$tdate);
 		$this->data['barduesales'] = $this->pos_model->getUpaidsales_departmentwise($sdate,$tdate,'Bar');
 		$this->data['barsales'] = $this->pos_model->getPaymntTypesales_departmentwise($sdate,$tdate,'Bar');
 		 $this->data['restsales'] = $this->pos_model->getPaymntTypesales_departmentwise($sdate,$tdate,'Rest');

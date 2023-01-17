@@ -159,6 +159,12 @@ if ($modal) {
 					echo '<td>&nbsp' . number_format($roww->amnt) . '</td></tr>'; 
 					$totalbar = $totalbar + $roww->amnt;
 				}
+				foreach ($prevpdsales as $rowww) {
+			echo '<tr style="font-size:15px"><td colspan="2">#:&nbsp;&nbsp; Prev Paid Bills'  ;
+                  
+					echo '<td>&nbsp' . number_format($rowww->amnt) . '</td></tr>'; 
+					$totalbar = $totalbar + $rowww->amnt;
+				}
                 ?>
 			<tr><td style="text-align:center;border-color: black !important;" border="1" colspan="2"><b>Bar Total </b></td><td align="centre" style="border-color: black !important;" border="1"><?php echo number_format($totalbar) ; ?></td></tr>
 				<tr><td style="text-align:center;border-color: black !important;" colspan="3"  border="1">Restaurant</td></tr>
@@ -204,6 +210,7 @@ if ($modal) {
 					echo '<td>&nbsp' . number_format($roww->amnt) . '</td></tr>';
 					                }
 				}
+				
                 ?>
 				<tr><td style="text-align:center;border-color: black !important;" border="1" colspan="2"><b>Restaurant Total </b></td><td align="centre" style="border-color: black !important;" border="1"> &nbsp;&nbsp;<?php echo number_format($totalrest) ; ?></td></tr>
 				
