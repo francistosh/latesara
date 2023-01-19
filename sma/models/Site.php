@@ -167,7 +167,9 @@ class Site extends CI_Model
     }
 
     public function getAllWarehouses() {
-        $q = $this->db->get('warehouses');
+		 $this->db->select('*')
+		       	->order_by('name');
+        $q = $this->db->get_where('warehouses',array('active' => '1'));
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

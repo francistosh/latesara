@@ -33,6 +33,7 @@
 		height: 70px;
 		min-width: 90px;
 	}
+	
 	</style>
 </head>
 <body>
@@ -231,13 +232,13 @@
                       
                             </div>
                             <div class="no-print">
-                                    <div class="form-group">
+                                    <div class="form-group " style="margin-bottom:20px">
                                         <?php
                                        $wh[''] = '';
                                         foreach ($warehouses as $warehouse) {
                                             $wh[$warehouse->id] = $warehouse->name;
                                         }
-                                        echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : ' '), 'id="poswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line("select") . ' ' . $this->lang->line("warehouse") . '" required="required" style="width:100%;" ');
+                                        echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : ' '), 'id="poswarehouse" class="form-control pos-input-tip"  data-placeholder="' . $this->lang->line("select") . ' ' . $this->lang->line("warehouse") . '" required="required" style="width:100%;" ');
                                         ?>
                                     </div>
             
@@ -261,11 +262,11 @@
                                            id="posTable" style="margin-bottom: 0;">
                                         <thead>
                                         <tr>
-                                            <th width="40%"><?= lang("product"); ?></th>
+                                            <th width="38%"><?= lang("product"); ?></th>
                                             <th width="15%"><?= lang("price"); ?></th>
                                             <th width="15%"><?= lang("qty"); ?></th>
                                             <th width="20%"><?= lang("subtotal"); ?></th>
-                                            <th style="width: 5%; text-align: center;"><i class="fa fa-trash-o"
+                                            <th style="width: 7%; text-align: center;"><i class="fa fa-trash-o"
                                                                                           style="opacity:0.5; filter:alpha(opacity=50);"></i>
                                             </th>
                                         </tr>
@@ -979,7 +980,7 @@
 				   <?php
                                         $wh[''] = '';
                                         foreach ($warehouses as $warehouse) {
-                                            $wh[$warehouse->id] = $warehouse->name;
+                                            $wh[$warehouse->id] = $warehouse->name.'<br>';
                                         }
                                         echo form_dropdown('saleswarehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="saleswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line("select") . ' ' . $this->lang->line("warehouse") . '" required="required" style="width:100%;" ');
                                         ?>
